@@ -11,7 +11,7 @@ function App() {
         const data = await getOmzetList()
         setOmzetData(data)
       } catch (err) {
-        console.error('Gagal memuat data omzet:', err)
+        console.error('Gagal memuat data transaksi:', err)
       } finally {
         setLoading(false)
       }
@@ -28,16 +28,16 @@ function App() {
         <p>Memuat data dari Supabase...</p>
       ) : (
         <div>
-          <h2>Daftar Omzet</h2>
+          <h2>Daftar Transaksi</h2>
           {omzetData.length === 0 ? (
-            <p>Belum ada data omzet di database.</p>
+            <p>Belum ada data transaksi di database.</p>
           ) : (
             <ul>
               {omzetData.map((item) => (
                 <li key={item.id}>
-                  <strong>{item.tanggal}</strong>: Rp{' '}
-                  {item.jumlah_omzet.toLocaleString('id-ID')}{' '}
-                  {item.keterangan ? `- ${item.keterangan}` : ''}
+                  <strong>{new Date(item.created_at || '').toLocaleDateString('id-ID')}</strong>: Rp{' '}
+                  {item.total_amount?.toLocaleString('id-ID') || 0}{' '}
+                  {item.payment_method ? `- Metode: ${item.payment_method}` : ''}
                 </li>
               ))}
             </ul>

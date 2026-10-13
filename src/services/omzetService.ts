@@ -1,38 +1,38 @@
 import { supabase } from '../lib/supabase';
 
-// 1. Tentukan Interface / Tipe Data
+// 1. Tentukan Interface / Tipe Data disesuaikan dengan tabel transactions
 export interface OmzetRecord {
   id?: string;
   created_at?: string;
-  tanggal: string;
-  jumlah_omzet: number;
-  keterangan?: string;
+  total_amount: number;
+  payment_method?: string;
+  user_id?: string;
 }
 
-// 2. Helper untuk mengambil semua data omzet
+// 2. Helper untuk mengambil semua data transaksi
 export const getOmzetList = async (): Promise<OmzetRecord[]> => {
   const { data, error } = await supabase
-    .from('omzet') // Sesuaikan nama tabel di Supabase Dashboard kamu jika berbeda
+    .from('transactions') // Diubah ke tabel resmi 'transactions'
     .select('*')
-    .order('tanggal', { ascending: false });
+    .order('created_at', { ascending: false }); // Diubah ke kolom 'created_at'
 
   if (error) {
-    console.error('Error fetching omzet:', error.message);
+    console.error('Error fetching transactions:', error.message);
     throw error;
   }
 
   return data || [];
 };
 
-// 3. Helper untuk menambah data omzet baru
+// 3. Helper untuk menambah data transaksi baru
 export const addOmzet = async (newRecord: OmzetRecord): Promise<OmzetRecord[]> => {
   const { data, error } = await supabase
-    .from('omzet')
+    .from('transactions') // Diubah ke tabel resmi 'transactions'
     .insert([newRecord])
     .select();
 
   if (error) {
-    console.error('Error adding omzet:', error.message);
+    console.error('Error adding transaction:', error.message);
     throw error;
   }
 
