@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import pool from '../config/db.js'; // pastikan path ini mengarah ke file koneksi db kamu
 
 export const registerUser = async (req, res) => {
     try {
@@ -13,14 +14,29 @@ export const registerUser = async (req, res) => {
             });
         }
 
+        // Cek apakah email sudah terdaftar
+        const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userCheck.rows.length > 0) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Email sudah terdaftar!'
+            });
+        }
+
+        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // (Opsional nanti) Simpan ke database PostgreSQL di sini
+        // Simpan user baru ke database PostgreSQL / Supabase
+        const newUser = await pool.query(
+            'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
+            [name, email, hashedPassword, role || 'user']
+        );
 
         res.status(201).json({
             status: 'success',
-            message: 'Registrasi berhasil! Silakan login.'
+            message: 'Registrasi berhasil! Silakan login.',
+            data: newUser.rows[0]
         });
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message });
@@ -39,8 +55,29 @@ export const loginUser = async (req, res) => {
             });
         }
 
+        // Cek ketersediaan user di database
+        const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userResult.rows.length === 0) {
+            return res.status(401).json({
+                status: 'error',
+                message: 'Email atau password salah!'
+            });
+        }
+
+        const user = userResult.rows[0];
+
+        // Verifikasi password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({
+                status: 'error',
+                message: 'Email atau password salah!'
+            });
+        }
+
+        // Generate JWT Token
         const token = jwt.sign(
-            { email: email, role: 'user' },
+            { id: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -48,7 +85,13 @@ export const loginUser = async (req, res) => {
         res.status(200).json({
             status: 'success',
             message: 'Login berhasil',
-            token: token
+            token: token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
         });
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message });
