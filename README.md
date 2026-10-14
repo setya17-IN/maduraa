@@ -157,3 +157,12 @@ Untuk memeriksa apakah Node.js dan npm sudah terinstall:
 ```bash
 node -v
 npm -v
+```
+
+## Konfigurasi Supabase
+
+Salin `.env.example` menjadi `.env.local`, lalu isi `VITE_SUPABASE_URL` dan
+`VITE_SUPABASE_ANON_KEY` dari pengaturan API proyek Supabase. Jangan masukkan
+service role key ke aplikasi frontend. Tabel `transactions` harus memiliki
+kolom `id`, `created_at`, dan `total` seperti pada
+[`docs/database_schema.sql`](./docs/database_schema.sql).
