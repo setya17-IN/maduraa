@@ -1,13 +1,31 @@
--- Maduraa - Initial Database Schema
--- Baseline only. Review and adapt to the final Supabase/PostgreSQL design
--- before running this script in a production/shared database.
+-- Maduraa - Database Schema (Complete)
+-- Jalankan script ini di Supabase SQL Editor atau PostgreSQL
 
+-- ============================================
+-- TABEL USERS (untuk auth backend)
+-- ============================================
+CREATE TABLE IF NOT EXISTS users (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(150) NOT NULL UNIQUE,
+  password TEXT NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'user',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================
+-- TABEL CATEGORIES
+-- ============================================
 CREATE TABLE IF NOT EXISTS categories (
   id BIGSERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL UNIQUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ============================================
+-- TABEL PRODUCTS
+-- ============================================
 CREATE TABLE IF NOT EXISTS products (
   id BIGSERIAL PRIMARY KEY,
   category_id BIGINT REFERENCES categories(id) ON DELETE SET NULL,
@@ -21,12 +39,18 @@ CREATE TABLE IF NOT EXISTS products (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ============================================
+-- TABEL TRANSACTIONS
+-- ============================================
 CREATE TABLE IF NOT EXISTS transactions (
   id BIGSERIAL PRIMARY KEY,
   total NUMERIC(14,2) NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ============================================
+-- TABEL TRANSACTION_ITEMS
+-- ============================================
 CREATE TABLE IF NOT EXISTS transaction_items (
   id BIGSERIAL PRIMARY KEY,
   transaction_id BIGINT NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
@@ -36,6 +60,12 @@ CREATE TABLE IF NOT EXISTS transaction_items (
   subtotal NUMERIC(14,2) NOT NULL
 );
 
--- Authentication is intended to use Supabase Auth.
--- User/profile tables and Row Level Security policies should be added
--- after the team's final authorization model is agreed.
+-- ============================================
+-- INDEXES untuk performa query
+-- ============================================
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
+CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);
+CREATE INDEX IF NOT EXISTS idx_transactions_created ON transactions(created_at);
+CREATE INDEX IF NOT EXISTS idx_transaction_items_txn ON transaction_items(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_transaction_items_product ON transaction_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
