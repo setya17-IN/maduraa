@@ -1,0 +1,53 @@
+# @name login
+POST http://localhost:5000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@gmail.com",
+  "password": "password123"
+}
+
+### Jalankan request login terlebih dahulu, lalu kirim request terproteksi.
+@token = {{login.response.body.token}}
+
+GET http://localhost:5000/api/v1/auth/profile
+Authorization: Bearer {{token}}
+
+### ==========================================
+### TEST ENDPOINT KATEGORI (PRODUCT CATEGORIES)
+### ==========================================
+
+### Get All Categories
+GET http://localhost:5000/api/v1/categories
+Authorization: Bearer {{token}}
+
+### Create Category
+POST http://localhost:5000/api/v1/categories
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Makanan"
+}
+
+
+### ==========================================
+### TEST ENDPOINT PRODUK (PRODUCTS)
+### ==========================================
+
+### Get All Products
+GET http://localhost:5000/api/v1/products
+Authorization: Bearer {{token}}
+
+
+### ==========================================
+### TEST ENDPOINT TRANSAKSI & REPORT
+### ==========================================
+
+### Get Transactions
+GET http://localhost:5000/api/v1/transactions
+Authorization: Bearer {{token}}
+
+### Get Dashboard Summary
+GET http://localhost:5000/api/v1/dashboard
+Authorization: Bearer {{token}}
