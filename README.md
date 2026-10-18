@@ -1,5 +1,13 @@
 # Maduraa
 
+## Struktur Repository
+
+- `client/` — aplikasi frontend React, TypeScript, dan Vite.
+- `server/` — API backend Node.js dan Express.
+- `docs/` — dokumentasi arsitektur, API, dan database.
+
+Konfigurasi npm dan Vite berada di root repository. Jalankan `npm run dev` atau `npm run build` dari root untuk frontend. Jalankan backend dengan `cd server` lalu `npm run dev` (atau `npm start`). File `.env` frontend berada di root; gunakan `client/.env.example` sebagai acuan. File `.env` backend berada di `server/`; gunakan `server/.env.example` sebagai acuan.
+
 Dev tim:
 
 Nenglia Fitri (Project Leader)
