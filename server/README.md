@@ -1,12 +1,21 @@
 # Server
 
-Workspace backend & database integration Maduraa.
+Backend Maduraa berbasis Node.js dan Express. Source backend berada di workspace ini dan terpisah dari aplikasi frontend di `client/`.
 
-## Rencana tanggung jawab
+## Struktur
 
-- Menyediakan API aplikasi jika arsitektur backend dipakai.
-- Menangani integrasi database PostgreSQL/Supabase.
-- Menjaga credential melalui environment variables.
-- Menyediakan endpoint yang didokumentasikan di `docs/api-specification.md`.
+- `src/index.js` — entry point dan konfigurasi Express.
+- `src/routes/` — definisi endpoint API.
+- `src/controllers/` — logika penanganan request.
+- `src/middlewares/` — middleware Express.
+- `.env.example` — contoh variabel lingkungan backend.
 
-> Jangan commit file `.env` yang berisi credential nyata.
+## Menjalankan
+
+```bash
+cd server
+npm install
+npm run dev
+```
+
+Gunakan `npm start` untuk menjalankan tanpa mode watch. Jangan commit file `.env` atau credential nyata.

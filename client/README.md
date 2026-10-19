@@ -1,14 +1,12 @@
 # Client
 
-Workspace frontend Maduraa.
+Frontend Maduraa menggunakan React, TypeScript, dan Vite.
 
-## Rencana struktur
+## Struktur
 
-- React + TypeScript + Vite
-- Routing menggunakan React Router
-- UI menggunakan Tailwind CSS (sesuai rancangan proyek)
-- Integrasi data/auth menggunakan Supabase atau API yang ditetapkan tim
+- `src/` — halaman, komponen, layanan, dan integrasi frontend.
+- `public/` — aset statis yang disalin Vite ke hasil build.
+- `index.html` — dokumen utama aplikasi.
+- `.env.example` — contoh konfigurasi Supabase untuk frontend.
 
-> Catatan: source Vite yang saat ini sudah berjalan masih berada di root `src/`.
-> Pemindahan source ke `client/` sebaiknya dilakukan sebagai refactor terpisah agar konfigurasi
-> Vite, TypeScript, dan dependency tidak rusak.
+Perintah npm dijalankan dari root repository. Salin `client/.env.example` ke `.env` di root untuk konfigurasi lokal. Jalankan `npm run dev` untuk mode pengembangan dan `npm run build` untuk membuat build produksi.

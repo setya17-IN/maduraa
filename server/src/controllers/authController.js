@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import pool from '../config/db.js'; // pastikan path ini mengarah ke file koneksi db kamu
+import pool from '../config/db.js';
 
 export const registerUser = async (req, res) => {
     try {
@@ -14,8 +14,8 @@ export const registerUser = async (req, res) => {
             });
         }
 
-        // Cek apakah email sudah terdaftar
-        const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        // Cek apakah email sudah terdaftar di tabel profiles
+        const userCheck = await pool.query('SELECT * FROM profiles WHERE email = $1', [email]);
         if (userCheck.rows.length > 0) {
             return res.status(400).json({
                 status: 'error',
@@ -27,9 +27,9 @@ export const registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Simpan user baru ke database PostgreSQL / Supabase
+        // Simpan user baru ke tabel profiles Supabase
         const newUser = await pool.query(
-            'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
+            'INSERT INTO profiles (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
             [name, email, hashedPassword, role || 'user']
         );
 
@@ -55,8 +55,8 @@ export const loginUser = async (req, res) => {
             });
         }
 
-        // Cek ketersediaan user di database
-        const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        // Cek ketersediaan user di tabel profiles
+        const userResult = await pool.query('SELECT * FROM profiles WHERE email = $1', [email]);
         if (userResult.rows.length === 0) {
             return res.status(401).json({
                 status: 'error',
