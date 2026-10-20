@@ -73,12 +73,12 @@ export const getProductById = async (req, res) => {
 // POST /api/v1/products — Tambah produk baru
 export const createProduct = async (req, res) => {
     try {
-        const { category_id, name, purchase_price, selling_price, stock, unit, photo_url } = req.body;
+        const { category_id, name, purchase_price, selling_price, stock, unit, image_url } = req.body;
 
         const result = await pool.query(
-            `INSERT INTO products (category_id, name, purchase_price, selling_price, stock, unit, photo_url)
+            `INSERT INTO products (category_id, name, purchase_price, selling_price, stock, unit, image_url)
              VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-            [category_id || null, name, purchase_price || 0, selling_price || 0, stock || 0, unit || 'pcs', photo_url || null]
+            [category_id || null, name, purchase_price ?? 0, selling_price ?? 0, stock ?? 0, unit || 'pcs', image_url || null]
         );
 
         return successResponse(res, 'Produk berhasil ditambahkan', result.rows[0], 201);
@@ -91,7 +91,15 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { category_id, name, purchase_price, selling_price, stock, unit, photo_url } = req.body;
+        const fields = {
+            category_id: req.body.category_id,
+            name: req.body.name,
+            purchase_price: req.body.purchase_price,
+            selling_price: req.body.selling_price,
+            stock: req.body.stock,
+            unit: req.body.unit,
+            image_url: req.body.image_url,
+        };
 
         // Cek apakah produk ada
         const productCheck = await pool.query('SELECT id FROM products WHERE id = $1', [id]);
@@ -99,12 +107,18 @@ export const updateProduct = async (req, res) => {
             return errorResponse(res, 'Produk tidak ditemukan', 404);
         }
 
+        const columnNames = Object.keys(fields).filter((key) => fields[key] !== undefined);
+        if (columnNames.length === 0) {
+            return errorResponse(res, 'Minimal satu field produk harus dikirim', 400);
+        }
+
+        const values = columnNames.map((key) => fields[key]);
+        const assignments = columnNames.map((key, index) => `${key} = $${index + 1}`);
+        values.push(id);
         const result = await pool.query(
-            `UPDATE products
-             SET category_id = $1, name = $2, purchase_price = $3, selling_price = $4,
-                 stock = $5, unit = $6, photo_url = $7, updated_at = NOW()
-             WHERE id = $8 RETURNING *`,
-            [category_id || null, name, purchase_price, selling_price, stock, unit || 'pcs', photo_url || null, id]
+            `UPDATE products SET ${assignments.join(', ')}, updated_at = NOW()
+             WHERE id = $${values.length} RETURNING *`,
+            values
         );
 
         return successResponse(res, 'Produk berhasil diupdate', result.rows[0]);

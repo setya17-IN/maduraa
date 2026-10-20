@@ -37,7 +37,7 @@ export const getSalesReport = async (req, res) => {
 
         // Total omzet
         const revenueResult = await pool.query(
-            `SELECT COALESCE(SUM(t.total), 0) AS total_revenue,
+            `SELECT COALESCE(SUM(t.total_amount), 0) AS total_revenue,
                     COUNT(t.id) AS total_transactions
              FROM transactions t
              WHERE ${dateFilter}`,
@@ -46,7 +46,7 @@ export const getSalesReport = async (req, res) => {
 
         // Estimasi keuntungan
         const profitResult = await pool.query(
-            `SELECT COALESCE(SUM((ti.unit_price - p.purchase_price) * ti.quantity), 0) AS total_profit
+            `SELECT COALESCE(SUM((ti.price - p.purchase_price) * ti.quantity), 0) AS total_profit
              FROM transaction_items ti
              JOIN products p ON ti.product_id = p.id
              JOIN transactions t ON ti.transaction_id = t.id
@@ -58,7 +58,7 @@ export const getSalesReport = async (req, res) => {
         const dailyBreakdown = await pool.query(
             `SELECT t.created_at::date AS date,
                     COUNT(t.id) AS transactions,
-                    COALESCE(SUM(t.total), 0) AS revenue
+                    COALESCE(SUM(t.total_amount), 0) AS revenue
              FROM transactions t
              WHERE ${dateFilter}
              GROUP BY t.created_at::date

@@ -15,14 +15,14 @@ export const getDashboardSummary = async (_req, res) => {
     try {
         // Omzet hari ini
         const todayRevenue = await pool.query(
-            `SELECT COALESCE(SUM(total), 0) AS revenue
+            `SELECT COALESCE(SUM(total_amount), 0) AS revenue
              FROM transactions
              WHERE created_at::date = CURRENT_DATE`
         );
 
         // Omzet bulan ini
         const monthRevenue = await pool.query(
-            `SELECT COALESCE(SUM(total), 0) AS revenue
+            `SELECT COALESCE(SUM(total_amount), 0) AS revenue
              FROM transactions
              WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)`
         );
@@ -37,7 +37,7 @@ export const getDashboardSummary = async (_req, res) => {
         // Estimasi keuntungan bulan ini
         // Keuntungan = SUM((selling_price - purchase_price) * quantity) per bulan
         const monthProfit = await pool.query(
-            `SELECT COALESCE(SUM((ti.unit_price - p.purchase_price) * ti.quantity), 0) AS profit
+            `SELECT COALESCE(SUM((ti.price - p.purchase_price) * ti.quantity), 0) AS profit
              FROM transaction_items ti
              JOIN products p ON ti.product_id = p.id
              JOIN transactions t ON ti.transaction_id = t.id

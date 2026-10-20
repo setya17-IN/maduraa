@@ -31,14 +31,14 @@ export const createTransaction = async (req, res) => {
         for (const item of items) {
             const { product_id, quantity } = item;
 
-            if (!product_id || !quantity || quantity <= 0) {
+            if (!product_id || !Number.isInteger(quantity) || quantity <= 0) {
                 await client.query('ROLLBACK');
                 return errorResponse(res, 'Setiap item harus memiliki product_id dan quantity > 0', 400);
             }
 
             // Ambil data produk
             const productResult = await client.query(
-                'SELECT id, name, selling_price, stock FROM products WHERE id = $1',
+                'SELECT id, name, selling_price, stock FROM products WHERE id = $1 FOR UPDATE',
                 [product_id]
             );
 
@@ -66,7 +66,7 @@ export const createTransaction = async (req, res) => {
             transactionItems.push({
                 product_id,
                 quantity,
-                unit_price: unitPrice,
+                price: unitPrice,
                 subtotal,
             });
 
@@ -79,17 +79,17 @@ export const createTransaction = async (req, res) => {
 
         // Simpan transaksi header
         const transactionResult = await client.query(
-            'INSERT INTO transactions (total) VALUES ($1) RETURNING *',
-            [grandTotal]
+            'INSERT INTO transactions (user_id, total_amount) VALUES ($1, $2) RETURNING *',
+            [req.user.id, grandTotal]
         );
         const transactionId = transactionResult.rows[0].id;
 
         // Simpan transaction items
         for (const ti of transactionItems) {
             await client.query(
-                `INSERT INTO transaction_items (transaction_id, product_id, quantity, unit_price, subtotal)
+                `INSERT INTO transaction_items (transaction_id, product_id, quantity, price, subtotal)
                  VALUES ($1, $2, $3, $4, $5)`,
-                [transactionId, ti.product_id, ti.quantity, ti.unit_price, ti.subtotal]
+                [transactionId, ti.product_id, ti.quantity, ti.price, ti.subtotal]
             );
         }
 
