@@ -56,15 +56,15 @@ export const loginUser = async (req, res) => {
         }
 
         // Cek ketersediaan user di tabel profiles
-        const userResult = await pool.query('SELECT * FROM profiles WHERE email = $1', [email]);
-        if (userResult.rows.length === 0) {
+        const userQuery = await pool.query('SELECT * FROM profiles WHERE email = $1', [email]);
+        if (userQuery.rows.length === 0) {
             return res.status(401).json({
                 status: 'error',
                 message: 'Email atau password salah!'
             });
         }
 
-        const user = userResult.rows[0];
+        const user = userQuery.rows[0];
 
         // Verifikasi password
         const isMatch = await bcrypt.compare(password, user.password);
@@ -85,7 +85,7 @@ export const loginUser = async (req, res) => {
         res.status(200).json({
             status: 'success',
             message: 'Login berhasil',
-            token: token,
+            token,
             user: {
                 id: user.id,
                 name: user.name,
