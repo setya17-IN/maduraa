@@ -1,10 +1,10 @@
 import express from 'express';
 import {
-    getProducts,
-    getProductById,
-    createProduct,
-    updateProduct,
-    deleteProduct,
+  getProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
 } from '../controllers/productController.js';
 import verifyToken from '../middlewares/verifyToken.js';
 import { validateRequired, validateIdParam } from '../middlewares/validateRequest.js';

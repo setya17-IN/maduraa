@@ -1,8 +1,8 @@
 import express from 'express';
 import {
-    createTransaction,
-    getTransactions,
-    getTransactionById,
+  createTransaction,
+  getTransactions,
+  getTransactionById,
 } from '../controllers/transactionController.js';
 import verifyToken from '../middlewares/verifyToken.js';
 import { validateIdParam } from '../middlewares/validateRequest.js';
