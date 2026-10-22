@@ -13,6 +13,8 @@ Backend Maduraa berbasis Node.js dan Express.
 
 ## Menjalankan
 
+Salin `.env.example` menjadi `.env` di direktori `server/`, lalu isi `DATABASE_URL`, `JWT_SECRET`, dan variabel backend lain yang diperlukan. Jangan gunakan file env backend di frontend.
+
 ```bash
 npm install
 npm run dev

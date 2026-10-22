@@ -4,12 +4,11 @@
 
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  full_name TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
   name VARCHAR,
-  email VARCHAR,
+  email VARCHAR UNIQUE,
   password VARCHAR,
-  role VARCHAR
+  role VARCHAR DEFAULT 'user'
 );
 
 CREATE TABLE IF NOT EXISTS categories (
