@@ -1,9 +1,9 @@
 import express from 'express';
 import {
-    getCategories,
-    createCategory,
-    updateCategory,
-    deleteCategory,
+  getCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
 } from '../controllers/categoryController.js';
 import verifyToken from '../middlewares/verifyToken.js';
 import { validateRequired, validateIdParam } from '../middlewares/validateRequest.js';

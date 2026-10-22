@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { frontendConfig } from '../config'
 
 let supabaseClient: SupabaseClient | undefined
 
@@ -7,8 +8,7 @@ export function getSupabaseClient(): SupabaseClient {
     return supabaseClient
   }
 
-  const url = import.meta.env.VITE_SUPABASE_URL
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+  const { supabaseUrl: url, supabaseAnonKey: anonKey } = frontendConfig
 
   if (!url || !anonKey) {
     throw new Error(

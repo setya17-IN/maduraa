@@ -1,16 +1,31 @@
-# @name login
-POST http://localhost:5000/api/v1/auth/login
+@baseUrl = http://localhost:5000/api/v1
+@testEmail = userbaru.testing@gmail.com
+@testPassword = TestPassword123!
+
+### Register a test account (change the email if this account already exists).
+POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "email": "user@gmail.com",
-  "password": "password123"
+  "name": "Test User",
+  "email": "{{testEmail}}",
+  "password": "{{testPassword}}"
 }
 
-### Jalankan request login terlebih dahulu, lalu kirim request terproteksi.
+### Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "{{testPassword}}"
+}
+
+### Run login first, then send the protected request.
 @token = {{login.response.body.token}}
 
-GET http://localhost:5000/api/v1/auth/profile
+GET {{baseUrl}}/auth/me
 Authorization: Bearer {{token}}
 
 ### ==========================================
@@ -18,11 +33,11 @@ Authorization: Bearer {{token}}
 ### ==========================================
 
 ### Get All Categories
-GET http://localhost:5000/api/v1/categories
+GET {{baseUrl}}/categories
 Authorization: Bearer {{token}}
 
 ### Create Category
-POST http://localhost:5000/api/v1/categories
+POST {{baseUrl}}/categories
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -36,7 +51,7 @@ Authorization: Bearer {{token}}
 ### ==========================================
 
 ### Get All Products
-GET http://localhost:5000/api/v1/products
+GET {{baseUrl}}/products
 Authorization: Bearer {{token}}
 
 
@@ -45,9 +60,9 @@ Authorization: Bearer {{token}}
 ### ==========================================
 
 ### Get Transactions
-GET http://localhost:5000/api/v1/transactions
+GET {{baseUrl}}/transactions
 Authorization: Bearer {{token}}
 
 ### Get Dashboard Summary
-GET http://localhost:5000/api/v1/dashboard
+GET {{baseUrl}}/dashboard/summary
 Authorization: Bearer {{token}}

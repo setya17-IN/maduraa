@@ -1,40 +1,41 @@
-import { supabase } from '../lib/supabase';
+import { getSupabaseClient } from '../lib/supabase'
 
 // 1. Tentukan Interface / Tipe Data disesuaikan dengan tabel transactions
 export interface OmzetRecord {
-  id?: string;
-  created_at?: string;
-  total_amount: number;
-  payment_method?: string;
-  user_id?: string;
+  id: string
+  created_at: string
+  total_amount: number
+  payment_method: string | null
+  user_id: string | null
 }
 
-// 2. Helper untuk mengambil semua data transaksi
 export const getOmzetList = async (): Promise<OmzetRecord[]> => {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabaseClient()
     .from('transactions') // Diubah ke tabel resmi 'transactions'
-    .select('*')
-    .order('created_at', { ascending: false }); // Diubah ke kolom 'created_at'
+    .select('id, user_id, total_amount, payment_method, created_at')
+    .order('created_at', { ascending: false })
 
   if (error) {
     console.error('Error fetching transactions:', error.message);
     throw error;
   }
 
-  return data || [];
-};
+  return (data ?? []) as OmzetRecord[]
+}
 
-// 3. Helper untuk menambah data transaksi baru
-export const addOmzet = async (newRecord: OmzetRecord): Promise<OmzetRecord[]> => {
-  const { data, error } = await supabase
+export type NewOmzetRecord = Pick<OmzetRecord, 'total_amount' | 'payment_method' | 'user_id'>
+
+export const addOmzet = async (newRecord: NewOmzetRecord): Promise<OmzetRecord> => {
+  const { data, error } = await getSupabaseClient()
     .from('transactions') // Diubah ke tabel resmi 'transactions'
-    .insert([newRecord])
-    .select();
+    .insert(newRecord)
+    .select('id, user_id, total_amount, payment_method, created_at')
+    .single()
 
   if (error) {
     console.error('Error adding transaction:', error.message);
     throw error;
   }
 
-  return data || [];
-};
+  return data as OmzetRecord
+}
