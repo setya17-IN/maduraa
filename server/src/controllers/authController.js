@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
+import { env } from '../config/env.js';
 
 export const registerUser = async (req, res) => {
   try {
@@ -78,7 +79,7 @@ export const loginUser = async (req, res) => {
     // Generate JWT Token
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
+      env.jwtSecret,
       { expiresIn: '24h' },
     );
 

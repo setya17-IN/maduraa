@@ -11,8 +11,10 @@ const errorHandler = (err, _req, res, _next) => {
   res.status(statusCode).json({
     status: 'error',
     message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(env.nodeEnv === 'development' && { stack: err.stack }),
   });
 };
 
 export default errorHandler;
+import { env } from '../config/env.js';
+
