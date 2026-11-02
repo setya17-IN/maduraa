@@ -30,6 +30,7 @@ Contoh response `200`:
 | POST | `/auth/register` | Tidak | Membuat akun |
 | POST | `/auth/login` | Tidak | Login dan memperoleh JWT |
 | GET | `/auth/me` | Bearer token | Mengambil klaim pengguna dari token |
+| POST | `/auth/logout` | Bearer token | Mencabut token saat ini |
 
 ### `POST /auth/register`
 
@@ -85,6 +86,16 @@ Response `200`:
 ```
 
 `user` adalah klaim JWT; endpoint ini tidak mengambil ulang profil dari database.
+
+### `POST /auth/logout`
+
+Kirim header `Authorization: Bearer <token>` yang sedang digunakan. Response `200`:
+
+```json
+{ "status": "success", "message": "Logout berhasil" }
+```
+
+Token dicabut di tabel `revoked_tokens` dan tidak dapat digunakan kembali. Jalankan definisi tabel tersebut dari `docs/database_schema.sql` pada database sebelum memakai endpoint ini.
 
 ## Categories
 
