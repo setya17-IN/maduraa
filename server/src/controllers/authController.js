@@ -1,7 +1,5 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
-import { env } from '../config/env.js';
+import { generateAuthToken, hashPassword, verifyPassword } from '../utils/authSecurity.js';
 
 export const registerUser = async (req, res) => {
   try {
@@ -25,8 +23,7 @@ export const registerUser = async (req, res) => {
     }
 
     // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await hashPassword(password);
 
     // Simpan user baru ke tabel profiles Supabase
     const newUser = await pool.query(
@@ -68,7 +65,7 @@ export const loginUser = async (req, res) => {
     const user = userQuery.rows[0];
 
     // Verifikasi password
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await verifyPassword(password, user.password);
     if (!isMatch) {
       return res.status(401).json({
         status: 'error',
@@ -77,11 +74,7 @@ export const loginUser = async (req, res) => {
     }
 
     // Generate JWT Token
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      env.jwtSecret,
-      { expiresIn: '24h' },
-    );
+    const token = generateAuthToken(user);
 
     res.status(200).json({
       status: 'success',
