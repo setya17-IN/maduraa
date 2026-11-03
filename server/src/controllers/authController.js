@@ -1,37 +1,26 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
-import { env } from '../config/env.js';
+import { errorResponse } from '../utils/responseHelper.js';
+import { generateAuthToken, hashPassword, verifyPassword } from '../utils/authSecurity.js';
 
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
-
-    // Validasi input kosong
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Nama, email, dan password wajib diisi!',
-      });
-    }
+    const { name, email, password } = req.body;
+    const normalizedEmail = email.trim().toLowerCase();
 
     // Cek apakah email sudah terdaftar di tabel profiles
-    const userCheck = await pool.query('SELECT * FROM profiles WHERE email = $1', [email]);
+    const userCheck = await pool.query('SELECT id FROM profiles WHERE LOWER(email) = $1', [
+      normalizedEmail,
+    ]);
     if (userCheck.rows.length > 0) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Email sudah terdaftar!',
-      });
+      return res.status(409).json({ status: 'error', message: 'Email sudah terdaftar' });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await hashPassword(password);
 
     // Simpan user baru ke tabel profiles Supabase
     const newUser = await pool.query(
       'INSERT INTO profiles (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
-      [name, email, hashedPassword, role || 'user'],
+      [name.trim(), normalizedEmail, hashedPassword, 'user'],
     );
 
     res.status(201).json({
@@ -40,7 +29,9 @@ export const registerUser = async (req, res) => {
       data: newUser.rows[0],
     });
   } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
+    if (error.code === '23505')
+      return res.status(409).json({ status: 'error', message: 'Email sudah terdaftar' });
+    return errorResponse(res, error.message);
   }
 };
 
@@ -48,40 +39,24 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validasi input login kosong
-    if (!email || !password) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Email dan password wajib diisi!',
-      });
-    }
-
     // Cek ketersediaan user di tabel profiles
-    const userQuery = await pool.query('SELECT * FROM profiles WHERE email = $1', [email]);
+    const userQuery = await pool.query('SELECT * FROM profiles WHERE LOWER(email) = $1', [
+      email.trim().toLowerCase(),
+    ]);
     if (userQuery.rows.length === 0) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Email atau password salah!',
-      });
+      return res.status(401).json({ status: 'error', message: 'Email atau password salah' });
     }
 
     const user = userQuery.rows[0];
 
     // Verifikasi password
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await verifyPassword(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Email atau password salah!',
-      });
+      return res.status(401).json({ status: 'error', message: 'Email atau password salah' });
     }
 
     // Generate JWT Token
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      env.jwtSecret,
-      { expiresIn: '24h' },
-    );
+    const token = generateAuthToken(user);
 
     res.status(200).json({
       status: 'success',
@@ -95,7 +70,7 @@ export const loginUser = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
+    return errorResponse(res, error.message);
   }
 };
 

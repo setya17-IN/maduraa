@@ -7,14 +7,34 @@ import {
   deleteProduct,
 } from '../controllers/productController.js';
 import verifyToken from '../middlewares/verifyToken.js';
-import { validateRequired, validateIdParam } from '../middlewares/validateRequest.js';
+import {
+  authorizeRoles,
+  validatePagination,
+  validateProduct,
+  validateRequired,
+  validateIdParam,
+} from '../middlewares/validateRequest.js';
 
 const router = express.Router();
 
-router.get('/', verifyToken, getProducts);
+router.get('/', verifyToken, validatePagination, getProducts);
 router.get('/:id', verifyToken, validateIdParam, getProductById);
-router.post('/', verifyToken, validateRequired(['name', 'selling_price']), createProduct);
-router.put('/:id', verifyToken, validateIdParam, updateProduct);
-router.delete('/:id', verifyToken, validateIdParam, deleteProduct);
+router.post(
+  '/',
+  verifyToken,
+  authorizeRoles('admin'),
+  validateRequired(['name', 'selling_price']),
+  validateProduct,
+  createProduct,
+);
+router.put(
+  '/:id',
+  verifyToken,
+  authorizeRoles('admin'),
+  validateIdParam,
+  validateProduct,
+  updateProduct,
+);
+router.delete('/:id', verifyToken, authorizeRoles('admin'), validateIdParam, deleteProduct);
 
 export default router;

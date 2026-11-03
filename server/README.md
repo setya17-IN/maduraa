@@ -13,7 +13,7 @@ Backend Maduraa berbasis Node.js dan Express.
 
 ## Menjalankan
 
-Salin `.env.example` menjadi `.env` di direktori `server/`, lalu isi `DATABASE_URL`, `JWT_SECRET`, dan variabel backend lain yang diperlukan. Jangan gunakan file env backend di frontend.
+Salin `.env.example` menjadi `.env` di direktori `server/`, lalu isi `DATABASE_URL`, `JWT_SECRET`, dan variabel backend lain yang diperlukan. `DATABASE_SSL` aktif secara default; nonaktifkan hanya untuk database lokal yang tidak memakai TLS. Jangan gunakan file env backend di frontend.
 
 ```bash
 npm install
@@ -21,6 +21,8 @@ npm run dev
 ```
 
 Gunakan `npm start` untuk menjalankan tanpa mode watch. Jangan commit file `.env` atau credential nyata.
+
+Pendaftaran publik selalu membuat akun dengan role `user`. Endpoint mutasi katalog serta dashboard/laporan memerlukan role `admin`; berikan role tersebut hanya melalui proses administratif tepercaya.
 
 ## Kualitas kode
 
