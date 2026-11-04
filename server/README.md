@@ -13,7 +13,7 @@ Backend Maduraa berbasis Node.js dan Express.
 
 ## Menjalankan
 
-Salin `.env.example` menjadi `.env` di direktori `server/`, lalu isi `DATABASE_URL`, `JWT_SECRET`, dan variabel backend lain yang diperlukan. Jangan gunakan file env backend di frontend.
+Salin `.env.example` menjadi `.env` di direktori `server/`, lalu isi `DATABASE_URL`, `JWT_SECRET`, dan variabel backend lain yang diperlukan. `JWT_SECRET` wajib berupa nilai rahasia unik minimal 32 karakter; gunakan secret acak dari environment/deployment secret manager. Jangan gunakan file env backend di frontend.
 
 ```bash
 npm install
@@ -21,6 +21,8 @@ npm run dev
 ```
 
 Gunakan `npm start` untuk menjalankan tanpa mode watch. Jangan commit file `.env` atau credential nyata.
+
+Jalankan unit test autentikasi dengan `npm test`.
 
 ## Kualitas kode
 

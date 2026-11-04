@@ -1,5 +1,4 @@
-import jwt from 'jsonwebtoken';
-import { env } from '../config/env.js';
+import { verifyAuthToken } from '../utils/authSecurity.js';
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -9,13 +8,12 @@ const verifyToken = (req, res, next) => {
     return res.status(401).json({ message: 'Akses ditolak, token tidak ditemukan!' });
   }
 
-  jwt.verify(token, env.jwtSecret, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ message: 'Token tidak valid atau kedaluwarsa!' });
-    }
-    req.user = decoded;
-    next();
-  });
+  try {
+    req.user = verifyAuthToken(token);
+    return next();
+  } catch {
+    return res.status(403).json({ message: 'Token tidak valid atau kedaluwarsa!' });
+  }
 };
 
 export default verifyToken;
