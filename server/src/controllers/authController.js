@@ -15,6 +15,7 @@ export const registerUser = async (req, res) => {
       return res.status(409).json({ status: 'error', message: 'Email sudah terdaftar' });
     }
 
+    // Hash password
     const hashedPassword = await hashPassword(password);
 
     // Simpan user baru ke tabel profiles Supabase

@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:5000/api/v1
-@testEmail = userbaru.testing@gmail.com
+@testEmail = userbaru.baru235@gmail.com
 @testPassword = TestPassword123!
 
 ### Register a test account (change the email if this account already exists).
