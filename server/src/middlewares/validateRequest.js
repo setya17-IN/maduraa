@@ -34,3 +34,12 @@ export const validateIdParam = (req, res, next) => {
   }
   next();
 };
+
+export const authorizeRoles =
+  (...roles) =>
+  (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ status: 'error', message: 'Akses tidak diizinkan' });
+    }
+    return next();
+  };

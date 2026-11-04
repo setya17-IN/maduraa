@@ -11,6 +11,15 @@ CREATE TABLE IF NOT EXISTS profiles (
   role VARCHAR DEFAULT 'user'
 );
 
+CREATE TABLE IF NOT EXISTS revoked_tokens (
+  jti TEXT PRIMARY KEY,
+  expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_revoked_tokens_expires_at ON revoked_tokens(expires_at);
+ALTER TABLE public.revoked_tokens ENABLE ROW LEVEL SECURITY;
+REVOKE ALL PRIVILEGES ON TABLE public.revoked_tokens FROM PUBLIC, anon, authenticated;
+
 CREATE TABLE IF NOT EXISTS categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,

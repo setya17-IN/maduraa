@@ -1,18 +1,32 @@
 import { verifyAuthToken } from '../utils/authSecurity.js';
+import pool from '../config/db.js';
 
-const verifyToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+const verifyToken = async (req, res, next) => {
+  const [scheme, token, ...extra] = (req.headers.authorization || '').trim().split(/\s+/);
 
-  if (!token) {
-    return res.status(401).json({ message: 'Akses ditolak, token tidak ditemukan!' });
+  if (scheme?.toLowerCase() !== 'bearer' || !token || extra.length > 0) {
+    return res.status(401).json({ status: 'error', message: 'Token akses wajib dikirim' });
+  }
+
+  let decoded;
+  try {
+    decoded = verifyAuthToken(token);
+  } catch {
+    return res.status(401).json({ status: 'error', message: 'Token tidak valid atau kedaluwarsa' });
   }
 
   try {
-    req.user = verifyAuthToken(token);
+    const revoked = await pool.query(
+      'SELECT 1 FROM revoked_tokens WHERE jti = $1 AND expires_at > NOW()',
+      [decoded.jti],
+    );
+    if (revoked.rowCount > 0) {
+      return res.status(401).json({ status: 'error', message: 'Token sudah dicabut. Silakan login kembali.' });
+    }
+    req.user = decoded;
     return next();
   } catch {
-    return res.status(403).json({ message: 'Token tidak valid atau kedaluwarsa!' });
+    return res.status(500).json({ status: 'error', message: 'Verifikasi token gagal' });
   }
 };
 

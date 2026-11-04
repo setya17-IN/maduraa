@@ -22,6 +22,8 @@ npm run dev
 
 Gunakan `npm start` untuk menjalankan tanpa mode watch. Jangan commit file `.env` atau credential nyata.
 
+Sebelum menggunakan logout JWT, siapkan tabel revokasi token dengan `npm run db:create-revoked-tokens`. Akun admin harus diberikan melalui proses administratif tepercaya; registrasi publik selalu membuat akun `user`.
+
 Jalankan unit test autentikasi dengan `npm test`.
 
 ## Kualitas kode

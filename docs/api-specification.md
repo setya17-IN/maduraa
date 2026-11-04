@@ -9,7 +9,7 @@ Semua endpoint menggunakan prefix `/api/v1`. Contoh memakai `http://localhost:50
 - Endpoint yang ditandai **Bearer token** memerlukan header `Authorization: Bearer <token>`.
 - ID kategori, produk, dan transaksi berbentuk UUID.
 - Response sukses umumnya berbentuk `{ "status": "success", "message": "...", "data": ... }`.
-- Response gagal dari helper umumnya berbentuk `{ "status": "error", "message": "..." }`. Beberapa endpoint autentikasi dan middleware mengembalikan bentuk yang sedikit berbeda seperti dijelaskan di bawah.
+- Response gagal berbentuk `{ "status": "error", "message": "..." }`.
 
 ## Health check
 
@@ -29,6 +29,7 @@ Contoh response `200`:
 |---|---|---|---|
 | POST | `/auth/register` | Tidak | Membuat akun |
 | POST | `/auth/login` | Tidak | Login dan memperoleh JWT |
+| POST | `/auth/logout` | Bearer token | Mencabut JWT yang sedang digunakan |
 | GET | `/auth/me` | Bearer token | Mengambil klaim pengguna dari token |
 
 ### `POST /auth/register`
@@ -39,7 +40,7 @@ Request:
 { "name": "Nama Pengguna", "email": "user@example.com", "password": "password-rahasia" }
 ```
 
-`name`, `email`, dan `password` wajib diisi. Backend meng-hash password sebelum disimpan. `role` saat ini dapat dikirim oleh pemanggil dan memiliki default `user`; pembatasan role belum diterapkan.
+`name`, `email`, dan `password` wajib diisi. Backend meng-hash password sebelum disimpan. Registrasi publik selalu membuat akun dengan role `user`; role admin hanya diberikan melalui proses administratif tepercaya.
 
 Response `201`:
 
@@ -70,7 +71,19 @@ Response `200`:
 }
 ```
 
-Kredensial yang tidak cocok menghasilkan `401`. Field wajib yang kosong menghasilkan `400`.
+Kredensial yang tidak cocok menghasilkan `401`. Field wajib yang kosong menghasilkan `400`. Setelah 10 percobaan login gagal dari IP yang sama dalam 15 menit, endpoint membalas `429`; login yang berhasil tidak dihitung.
+
+### `POST /auth/logout`
+
+Kirim token yang sedang digunakan pada header `Authorization: Bearer <token>`. Backend mencatat `jti` token di tabel `revoked_tokens`; request berikutnya dengan token itu ditolak.
+
+Response `200`:
+
+```json
+{ "status": "success", "message": "Logout berhasil" }
+```
+
+Sebelum memakai endpoint, dari direktori `server` jalankan `npm run db:create-revoked-tokens` setelah `.env` backend terisi.
 
 ### `GET /auth/me`
 
@@ -80,7 +93,7 @@ Response `200`:
 {
   "status": "success",
   "message": "Profil pengguna berhasil diambil",
-  "user": { "id": "<uuid>", "email": "user@example.com", "role": "user", "iat": 0, "exp": 0 }
+  "user": { "id": "<uuid>", "email": "user@example.com", "role": "user", "iat": 0, "exp": 0, "jti": "<uuid>" }
 }
 ```
 
@@ -88,7 +101,7 @@ Response `200`:
 
 ## Categories
 
-Semua endpoint kategori memerlukan Bearer token.
+Semua endpoint kategori memerlukan Bearer token. Operasi membuat, mengubah, dan menghapus kategori hanya untuk role `admin`.
 
 | Method | Endpoint | Fungsi |
 |---|---|---|
@@ -107,7 +120,7 @@ Nama wajib diisi. Nama duplikat (tanpa membedakan huruf besar/kecil) menghasilka
 
 ## Products
 
-Semua endpoint produk memerlukan Bearer token.
+Semua endpoint produk memerlukan Bearer token. Operasi membuat, mengubah, dan menghapus produk hanya untuk role `admin`.
 
 | Method | Endpoint | Fungsi |
 |---|---|---|
@@ -154,7 +167,7 @@ Untuk `PUT`, kirim satu atau lebih field yang ingin diubah dari daftar field ter
 
 ## Transactions
 
-Semua endpoint transaksi memerlukan Bearer token.
+Semua endpoint transaksi memerlukan Bearer token. Pengguna hanya dapat membaca transaksinya sendiri; role `admin` dapat membaca semua transaksi.
 
 | Method | Endpoint | Fungsi |
 |---|---|---|
@@ -185,7 +198,7 @@ Request:
 
 ## Dashboard dan laporan
 
-Kedua endpoint memerlukan Bearer token.
+Kedua endpoint memerlukan Bearer token dan role `admin`.
 
 | Method | Endpoint | Fungsi |
 |---|---|---|
@@ -201,17 +214,17 @@ Laporan menerima salah satu query `type=daily`, `type=weekly`, atau `type=monthl
 | Status | Arti umum |
 |---|---|
 | 400 | Input tidak valid atau field wajib tidak ada |
-| 401 | Token tidak ada atau kredensial login salah |
-| 403 | Token tidak valid/kedaluwarsa |
+| 401 | Token tidak ada, tidak valid, dicabut, atau kredensial login salah |
+| 403 | Pengguna terautentikasi tidak memiliki role yang diperlukan |
+| 429 | Terlalu banyak percobaan login |
 | 404 | Endpoint atau record tidak ditemukan |
 | 409 | Konflik, seperti nama kategori duplikat |
 | 500 | Kesalahan server atau database |
 
-Middleware autentikasi saat ini merespons `{ "message": "..." }` tanpa field `status`. Error database lain dapat menyertakan pesan internal; format error terstandar dan validasi query yang lebih ketat masih perlu diselaraskan.
+Error server mengembalikan pesan umum; detail internal dicatat di log server.
 
 ## Belum tersedia
 
-- `/auth/logout` dan `/auth/session` belum memiliki route. JWT saat ini stateless; logout dilakukan dengan menghapus token di sisi client.
-- Pembatasan akses berdasarkan role belum tersedia.
+- `/auth/session` belum memiliki route.
 - Filter tanggal khusus hanya diterapkan jika `start_date` dan `end_date` dikirim bersama-sama; format tanggal belum divalidasi khusus oleh controller.
 - Upload foto produk belum tersedia sebagai endpoint; produk hanya menerima `image_url`.

@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "db:create-revoked-tokens": "node src/database/createRevokedTokensTable.js",
     "test": "node --test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -21,6 +22,7 @@
     "cors": "^2.8.6",
     "dotenv": "^18.0.7",
     "express": "^5.3.0",
+    "express-rate-limit": "^8.7.3",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.13.1"
   },

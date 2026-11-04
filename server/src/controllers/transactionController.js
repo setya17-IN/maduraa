@@ -123,13 +123,21 @@ export const getTransactions = async (req, res) => {
     const offset = (page - 1) * limit;
 
     // Count total
-    const countResult = await pool.query('SELECT COUNT(*) AS total FROM transactions');
+    const isAdmin = req.user.role === 'admin';
+    const countResult = await pool.query(
+      isAdmin
+        ? 'SELECT COUNT(*) AS total FROM transactions'
+        : 'SELECT COUNT(*) AS total FROM transactions WHERE user_id = $1',
+      isAdmin ? [] : [req.user.id],
+    );
     const total = parseInt(countResult.rows[0].total);
 
     // Fetch transactions
     const transactions = await pool.query(
-      'SELECT * FROM transactions ORDER BY created_at DESC LIMIT $1 OFFSET $2',
-      [limit, offset],
+      isAdmin
+        ? 'SELECT * FROM transactions ORDER BY created_at DESC LIMIT $1 OFFSET $2'
+        : 'SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
+      isAdmin ? [limit, offset] : [req.user.id, limit, offset],
     );
 
     // Fetch items untuk setiap transaksi
@@ -168,7 +176,12 @@ export const getTransactionById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const transaction = await pool.query('SELECT * FROM transactions WHERE id = $1', [id]);
+    const transaction = await pool.query(
+      req.user.role === 'admin'
+        ? 'SELECT * FROM transactions WHERE id = $1'
+        : 'SELECT * FROM transactions WHERE id = $1 AND user_id = $2',
+      req.user.role === 'admin' ? [id] : [id, req.user.id],
+    );
     if (transaction.rows.length === 0) {
       return errorResponse(res, 'Transaksi tidak ditemukan', 404);
     }
