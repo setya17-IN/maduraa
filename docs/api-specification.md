@@ -30,7 +30,7 @@ Contoh response `200`:
 | POST | `/auth/register` | Tidak | Membuat akun |
 | POST | `/auth/login` | Tidak | Login dan memperoleh JWT |
 | GET | `/auth/me` | Bearer token | Mengambil klaim pengguna dari token |
-| POST | `/auth/logout` | Bearer token | Mencabut token saat ini |
+| POST | `/auth/logout` | Bearer token | Mencabut token di sisi server dengan menambahkan token ke tabel `revoked_tokens` |
 
 ### `POST /auth/register`
 
