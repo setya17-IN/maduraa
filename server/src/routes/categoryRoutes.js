@@ -6,13 +6,24 @@ import {
   deleteCategory,
 } from '../controllers/categoryController.js';
 import verifyToken from '../middlewares/verifyToken.js';
-import { validateRequired, validateIdParam } from '../middlewares/validateRequest.js';
+import {
+  authorizeRoles,
+  validateCategory,
+  validateIdParam,
+} from '../middlewares/validateRequest.js';
 
 const router = express.Router();
 
 router.get('/', verifyToken, getCategories);
-router.post('/', verifyToken, validateRequired(['name']), createCategory);
-router.put('/:id', verifyToken, validateIdParam, validateRequired(['name']), updateCategory);
-router.delete('/:id', verifyToken, validateIdParam, deleteCategory);
+router.post('/', verifyToken, authorizeRoles('admin'), validateCategory, createCategory);
+router.put(
+  '/:id',
+  verifyToken,
+  authorizeRoles('admin'),
+  validateIdParam,
+  validateCategory,
+  updateCategory,
+);
+router.delete('/:id', verifyToken, authorizeRoles('admin'), validateIdParam, deleteCategory);
 
 export default router;

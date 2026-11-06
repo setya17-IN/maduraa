@@ -14,6 +14,10 @@ export const successResponse = (res, message, data = null, statusCode = 200) => 
 };
 
 export const errorResponse = (res, message, statusCode = 500) => {
+  if (statusCode >= 500) {
+    console.error('Request failed:', message);
+    message = 'Terjadi kesalahan pada server';
+  }
   return res.status(statusCode).json({
     status: 'error',
     message,
