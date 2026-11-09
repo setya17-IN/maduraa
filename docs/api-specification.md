@@ -30,6 +30,7 @@ Contoh response `200`:
 | POST   | `/auth/register` | Tidak        | Membuat akun                        |
 | POST   | `/auth/login`    | Tidak        | Login dan memperoleh JWT            |
 | GET    | `/auth/me`       | Bearer token | Mengambil klaim pengguna dari token |
+| POST   | `/auth/logout`  | Bearer token | Mencabut token di tabel `revoked_tokens` |
 
 ### `POST /auth/register`
 
@@ -105,6 +106,16 @@ Response `200`:
 ```
 
 `user` adalah klaim JWT; endpoint ini tidak mengambil ulang profil dari database.
+
+### `POST /auth/logout`
+
+Kirim header `Authorization: Bearer <token>` yang sedang digunakan. Response `200`:
+
+```json
+{ "status": "success", "message": "Logout berhasil" }
+```
+
+Token dicabut di tabel `revoked_tokens` dan tidak dapat digunakan kembali. Login menghasilkan token dengan ID unik (`jti`). Jalankan definisi tabel tersebut dari `docs/database_schema.sql` pada database sebelum memakai endpoint ini.
 
 ## Categories
 
@@ -243,7 +254,7 @@ Token tidak ada atau tidak valid menghasilkan `401`; role yang tidak diizinkan m
 
 ## Belum tersedia
 
-- `/auth/logout` dan `/auth/session` belum memiliki route. JWT saat ini stateless; logout dilakukan dengan menghapus token di sisi client.
+- `/auth/session` belum memiliki route. Logout tersedia melalui `/auth/logout` dan memerlukan tabel `revoked_tokens`.
 - Role `admin` diberikan melalui proses administratif tepercaya; registrasi publik selalu membuat role `user`.
-- Filter tanggal laporan menerima pasangan tanggal ISO yang valid dan menolak rentang terbalik.
+- Query laporan memvalidasi jenis periode dan pasangan tanggal ISO, menolak rentang terbalik, dan tidak menerima `type` bersamaan dengan rentang tanggal.
 - Upload foto produk belum tersedia sebagai endpoint; produk hanya menerima `image_url`.

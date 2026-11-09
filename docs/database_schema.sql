@@ -11,6 +11,14 @@ CREATE TABLE IF NOT EXISTS profiles (
   role VARCHAR DEFAULT 'user'
 );
 
+-- JWT IDs are recorded here on logout so protected routes can reject revoked tokens.
+CREATE TABLE IF NOT EXISTS revoked_tokens (
+  jti TEXT PRIMARY KEY,
+  expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_revoked_tokens_expires_at ON revoked_tokens(expires_at);
+
 CREATE TABLE IF NOT EXISTS categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,

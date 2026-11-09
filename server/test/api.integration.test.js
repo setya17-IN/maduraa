@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { after, before, describe, it } from 'node:test';
+import { after, before, beforeEach, describe, it } from 'node:test';
+import jwt from 'jsonwebtoken';
 
 process.env.DATABASE_URL ??= 'postgresql://test:test@127.0.0.1:5432/test';
 process.env.JWT_SECRET ??= 'integration-test-secret-that-is-at-least-32-characters';
@@ -12,6 +13,7 @@ const [{ default: app }, { default: pool }, { generateAuthToken }] = await Promi
 
 let server;
 let baseUrl;
+let revokedJtiForTest = null;
 
 before(async () => {
   server = app.listen(0, '127.0.0.1');
@@ -20,6 +22,17 @@ before(async () => {
     server.once('error', reject);
   });
   baseUrl = `http://127.0.0.1:${server.address().port}/api/v1`;
+});
+
+beforeEach((t) => {
+  const originalQuery = pool.query.bind(pool);
+  t.mock.method(pool, 'query', async (query, ...args) => {
+    if (typeof query === 'string' && query.includes('FROM revoked_tokens')) {
+      const isRevoked = revokedJtiForTest !== null && args[0]?.[0] === revokedJtiForTest;
+      return { rowCount: isRevoked ? 1 : 0, rows: isRevoked ? [{}] : [] };
+    }
+    return originalQuery(query, ...args);
+  });
 });
 
 after(async () => {
@@ -53,6 +66,20 @@ describe('HTTP API middleware integration', () => {
       headers: { Authorization: 'Bearer invalid-token' },
     });
     assert.equal(invalid.status, 401);
+  });
+
+  it('rejects a token whose jti is present in revoked_tokens', async () => {
+    const token = tokenFor('user');
+    revokedJtiForTest = jwt.decode(token).jti;
+
+    try {
+      const response = await fetch(`${baseUrl}/products`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      assert.equal(response.status, 401);
+    } finally {
+      revokedJtiForTest = null;
+    }
   });
 
   it('blocks regular users from admin routes before database access', async () => {
