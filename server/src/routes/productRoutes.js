@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import {
   getProducts,
   getProductById,
@@ -7,14 +7,34 @@ import {
   deleteProduct,
 } from '../controllers/productController.js';
 import verifyToken from '../middlewares/verifyToken.js';
-import { authorizeRoles, validateRequired, validateIdParam } from '../middlewares/validateRequest.js';
+import {
+  authorizeRoles,
+  validatePagination,
+  validateProduct,
+  validateRequired,
+  validateIdParam,
+} from '../middlewares/validateRequest.js';
 
 const router = express.Router();
 
-router.get('/', verifyToken, getProducts);
+router.get('/', verifyToken, validatePagination, getProducts);
 router.get('/:id', verifyToken, validateIdParam, getProductById);
-router.post('/', verifyToken, authorizeRoles('admin'), validateRequired(['name', 'selling_price']), createProduct);
-router.put('/:id', verifyToken, authorizeRoles('admin'), validateIdParam, updateProduct);
+router.post(
+  '/',
+  verifyToken,
+  authorizeRoles('admin'),
+  validateRequired(['name', 'selling_price']),
+  validateProduct,
+  createProduct,
+);
+router.put(
+  '/:id',
+  verifyToken,
+  authorizeRoles('admin'),
+  validateIdParam,
+  validateProduct,
+  updateProduct,
+);
 router.delete('/:id', verifyToken, authorizeRoles('admin'), validateIdParam, deleteProduct);
 
 export default router;

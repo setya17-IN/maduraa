@@ -1,5 +1,5 @@
-import bcrypt from 'bcryptjs';
-import { randomUUID } from 'node:crypto';
+﻿import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 
 const getJwtSecret = () => {
@@ -21,7 +21,7 @@ export const generateAuthToken = (user) =>
   jwt.sign({ id: user.id, email: user.email, role: user.role }, getJwtSecret(), {
     algorithm: 'HS256',
     expiresIn: '24h',
-    jwtid: randomUUID(),
+    jwtid: crypto.randomUUID(),
   });
 
 export const verifyAuthToken = (token) => {

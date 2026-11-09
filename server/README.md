@@ -1,4 +1,4 @@
-# Server
+﻿# Server
 
 Backend Maduraa berbasis Node.js dan Express.
 
@@ -14,6 +14,7 @@ Backend Maduraa berbasis Node.js dan Express.
 ## Menjalankan
 
 Salin `.env.example` menjadi `.env` di direktori `server/`, lalu isi `DATABASE_URL`, `JWT_SECRET`, dan variabel backend lain yang diperlukan. `JWT_SECRET` wajib berupa nilai rahasia unik minimal 32 karakter; gunakan secret acak dari environment/deployment secret manager. Jangan gunakan file env backend di frontend.
+`DATABASE_SSL` aktif secara default; nonaktifkan hanya untuk database lokal yang tidak memakai TLS.
 
 ```bash
 npm install
@@ -22,7 +23,9 @@ npm run dev
 
 Gunakan `npm start` untuk menjalankan tanpa mode watch. Jangan commit file `.env` atau credential nyata.
 
-Sebelum menggunakan logout JWT, siapkan tabel revokasi token dengan `npm run db:create-revoked-tokens`. Akun admin harus diberikan melalui proses administratif tepercaya; registrasi publik selalu membuat akun `user`.
+Pendaftaran publik selalu membuat akun dengan role `user`. Endpoint mutasi katalog serta dashboard/laporan memerlukan role `admin`; berikan role tersebut hanya melalui proses administratif tepercaya.
+
+Sebelum menggunakan logout JWT, siapkan tabel revokasi token dengan `npm run db:create-revoked-tokens` atau terapkan definisi `revoked_tokens` di `docs/database_schema.sql`. Login dibatasi hingga 10 percobaan gagal dari IP yang sama dalam 15 menit; percobaan login yang berhasil tidak dihitung.
 
 Jalankan unit test autentikasi dengan `npm test`.
 

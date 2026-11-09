@@ -5,15 +5,11 @@ const { Pool } = pg;
 
 const pool = new Pool({
   connectionString: env.databaseUrl,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl: env.databaseSsl ? { rejectUnauthorized: true } : false,
 });
 
-// Tes koneksi saat startup
-pool
-  .query('SELECT NOW()')
-  .then(() => console.log('✅ Database terhubung'))
-  .catch((err) => console.error('❌ Gagal terhubung ke database:', err.message));
+pool.on('error', (error) => {
+  console.error('Unexpected database pool error:', error);
+});
 
 export default pool;

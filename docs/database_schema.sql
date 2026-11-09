@@ -1,4 +1,4 @@
--- Reference schema matching the Supabase tables shown in the project schema.
+﻿-- Reference schema matching the Supabase tables shown in the project schema.
 -- This file describes the expected structure; it does not modify the live project.
 -- Review existing columns, constraints, grants, and RLS policies before applying SQL.
 
@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   role VARCHAR DEFAULT 'user'
 );
 
+-- JWT IDs are recorded here on logout so protected routes can reject revoked tokens.
 CREATE TABLE IF NOT EXISTS revoked_tokens (
   jti TEXT PRIMARY KEY,
   expires_at TIMESTAMPTZ NOT NULL

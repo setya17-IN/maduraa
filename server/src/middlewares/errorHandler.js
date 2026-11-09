@@ -5,16 +5,13 @@
 const errorHandler = (err, _req, res, _next) => {
   console.error('❌ Unhandled Error:', err.stack || err.message);
 
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Terjadi kesalahan pada server';
+  const statusCode = err.statusCode || err.status || 500;
+  const message = statusCode >= 500 ? 'Terjadi kesalahan pada server' : err.message;
 
   res.status(statusCode).json({
     status: 'error',
     message,
-    ...(env.nodeEnv === 'development' && { stack: err.stack }),
   });
 };
 
 export default errorHandler;
-import { env } from '../config/env.js';
-

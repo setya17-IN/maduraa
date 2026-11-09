@@ -1,4 +1,4 @@
-import pool from '../config/db.js';
+﻿import pool from '../config/db.js';
 import { successResponse, errorResponse } from '../utils/responseHelper.js';
 
 /**
@@ -14,15 +14,14 @@ import { successResponse, errorResponse } from '../utils/responseHelper.js';
  * }
  */
 export const createTransaction = async (req, res) => {
-  const client = await pool.connect();
+  let client;
+  let transactionStarted = false;
   try {
     const { items } = req.body;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return errorResponse(res, 'Items transaksi wajib diisi dan tidak boleh kosong', 400);
-    }
-
+    client = await pool.connect();
     await client.query('BEGIN');
+    transactionStarted = true;
 
     let grandTotal = 0;
     const transactionItems = [];
@@ -31,11 +30,6 @@ export const createTransaction = async (req, res) => {
     for (const item of items) {
       const { product_id, quantity } = item;
 
-      if (!product_id || !Number.isInteger(quantity) || quantity <= 0) {
-        await client.query('ROLLBACK');
-        return errorResponse(res, 'Setiap item harus memiliki product_id dan quantity > 0', 400);
-      }
-
       // Ambil data produk
       const productResult = await client.query(
         'SELECT id, name, selling_price, stock FROM products WHERE id = $1 FOR UPDATE',
@@ -43,7 +37,6 @@ export const createTransaction = async (req, res) => {
       );
 
       if (productResult.rows.length === 0) {
-        await client.query('ROLLBACK');
         return errorResponse(res, `Produk dengan ID ${product_id} tidak ditemukan`, 404);
       }
 
@@ -51,7 +44,6 @@ export const createTransaction = async (req, res) => {
 
       // Cek stok cukup
       if (parseFloat(product.stock) < quantity) {
-        await client.query('ROLLBACK');
         return errorResponse(
           res,
           `Stok "${product.name}" tidak cukup. Tersisa: ${product.stock}`,
@@ -94,6 +86,7 @@ export const createTransaction = async (req, res) => {
     }
 
     await client.query('COMMIT');
+    transactionStarted = false;
 
     return successResponse(
       res,
@@ -105,10 +98,16 @@ export const createTransaction = async (req, res) => {
       201,
     );
   } catch (error) {
-    await client.query('ROLLBACK');
     return errorResponse(res, error.message);
   } finally {
-    client.release();
+    if (client && transactionStarted) {
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackError) {
+        console.error('Transaction rollback failed:', rollbackError);
+      }
+    }
+    client?.release();
   }
 };
 
@@ -122,7 +121,6 @@ export const getTransactions = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const offset = (page - 1) * limit;
 
-    // Count total
     const isAdmin = req.user.role === 'admin';
     const countResult = await pool.query(
       isAdmin
@@ -133,12 +131,15 @@ export const getTransactions = async (req, res) => {
     const total = parseInt(countResult.rows[0].total);
 
     // Fetch transactions
-    const transactions = await pool.query(
-      isAdmin
-        ? 'SELECT * FROM transactions ORDER BY created_at DESC LIMIT $1 OFFSET $2'
-        : 'SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
-      isAdmin ? [limit, offset] : [req.user.id, limit, offset],
-    );
+    const transactions = isAdmin
+      ? await pool.query('SELECT * FROM transactions ORDER BY created_at DESC LIMIT $1 OFFSET $2', [
+          limit,
+          offset,
+        ])
+      : await pool.query(
+          'SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
+          [req.user.id, limit, offset],
+        );
 
     // Fetch items untuk setiap transaksi
     const transactionsWithItems = await Promise.all(
@@ -176,12 +177,13 @@ export const getTransactionById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const transaction = await pool.query(
+    const transaction =
       req.user.role === 'admin'
-        ? 'SELECT * FROM transactions WHERE id = $1'
-        : 'SELECT * FROM transactions WHERE id = $1 AND user_id = $2',
-      req.user.role === 'admin' ? [id] : [id, req.user.id],
-    );
+        ? await pool.query('SELECT * FROM transactions WHERE id = $1', [id])
+        : await pool.query('SELECT * FROM transactions WHERE id = $1 AND user_id = $2', [
+            id,
+            req.user.id,
+          ]);
     if (transaction.rows.length === 0) {
       return errorResponse(res, 'Transaksi tidak ditemukan', 404);
     }
