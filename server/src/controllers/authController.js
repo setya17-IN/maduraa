@@ -1,4 +1,4 @@
-import pool from '../config/db.js';
+﻿import pool from '../config/db.js';
 import { errorResponse } from '../utils/responseHelper.js';
 import { generateAuthToken, hashPassword, verifyPassword } from '../utils/authSecurity.js';
 

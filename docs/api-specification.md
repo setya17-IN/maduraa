@@ -1,4 +1,4 @@
-# API Specification
+﻿# API Specification
 
 Dokumen ini menjelaskan kontrak API yang saat ini tersedia di backend Maduraa.
 Semua endpoint menggunakan prefix `/api/v1`. Contoh memakai `http://localhost:5000` sebagai base URL lokal.
@@ -86,6 +86,7 @@ Response `200`:
 ```
 
 Kredensial yang tidak cocok menghasilkan `401`. Field wajib yang kosong menghasilkan `400`.
+Setelah 10 percobaan login gagal dari IP yang sama dalam 15 menit, endpoint membalas `429`; login yang berhasil tidak dihitung.
 
 ### `GET /auth/me`
 
@@ -100,7 +101,8 @@ Response `200`:
     "email": "user@example.com",
     "role": "user",
     "iat": 0,
-    "exp": 0
+    "exp": 0,
+    "jti": "<uuid>"
   }
 }
 ```
@@ -244,8 +246,9 @@ Laporan menerima salah satu query `type=daily`, `type=weekly`, atau `type=monthl
 | Status | Arti umum                                    |
 | ------ | -------------------------------------------- |
 | 400    | Input tidak valid atau field wajib tidak ada |
-| 401    | Token tidak ada atau kredensial login salah  |
+| 401    | Token tidak ada, tidak valid, kedaluwarsa, dicabut, atau kredensial login salah |
 | 403    | Role tidak berhak mengakses endpoint         |
+| 429    | Terlalu banyak percobaan login               |
 | 404    | Endpoint atau record tidak ditemukan         |
 | 409    | Konflik, seperti nama kategori duplikat      |
 | 500    | Kesalahan server atau database               |

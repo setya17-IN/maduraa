@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import { getSalesReport } from '../controllers/reportController.js';
 import verifyToken from '../middlewares/verifyToken.js';
 import { authorizeRoles, validateReportQuery } from '../middlewares/validateRequest.js';

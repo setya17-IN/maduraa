@@ -1,4 +1,4 @@
--- Reference schema matching the Supabase tables shown in the project schema.
+﻿-- Reference schema matching the Supabase tables shown in the project schema.
 -- This file describes the expected structure; it does not modify the live project.
 -- Review existing columns, constraints, grants, and RLS policies before applying SQL.
 
@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS revoked_tokens (
 );
 
 CREATE INDEX IF NOT EXISTS idx_revoked_tokens_expires_at ON revoked_tokens(expires_at);
+ALTER TABLE public.revoked_tokens ENABLE ROW LEVEL SECURITY;
+REVOKE ALL PRIVILEGES ON TABLE public.revoked_tokens FROM PUBLIC, anon, authenticated;
 
 CREATE TABLE IF NOT EXISTS categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

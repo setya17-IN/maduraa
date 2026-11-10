@@ -1,4 +1,4 @@
-# Server
+﻿# Server
 
 Backend Maduraa berbasis Node.js dan Express.
 
@@ -24,6 +24,8 @@ npm run dev
 Gunakan `npm start` untuk menjalankan tanpa mode watch. Jangan commit file `.env` atau credential nyata.
 
 Pendaftaran publik selalu membuat akun dengan role `user`. Endpoint mutasi katalog serta dashboard/laporan memerlukan role `admin`; berikan role tersebut hanya melalui proses administratif tepercaya.
+
+Sebelum menggunakan logout JWT, siapkan tabel revokasi token dengan `npm run db:create-revoked-tokens` atau terapkan definisi `revoked_tokens` di `docs/database_schema.sql`. Login dibatasi hingga 10 percobaan gagal dari IP yang sama dalam 15 menit; percobaan login yang berhasil tidak dihitung.
 
 Jalankan unit test autentikasi dengan `npm test`.
 

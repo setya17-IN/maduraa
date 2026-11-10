@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+﻿import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 import pool from '../config/db.js';
 
@@ -12,7 +12,11 @@ const verifyToken = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, env.jwtSecret, { algorithms: ['HS256'] });
-    if (!decoded.jti || !decoded.exp) {
+    if (
+      typeof decoded !== 'object' ||
+      typeof decoded.jti !== 'string' ||
+      !Number.isInteger(decoded.exp)
+    ) {
       return res.status(401).json({ status: 'error', message: 'Token tidak valid atau kedaluwarsa!' });
     }
 

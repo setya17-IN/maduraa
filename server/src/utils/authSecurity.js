@@ -1,4 +1,4 @@
-import bcrypt from 'bcryptjs';
+﻿import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 
@@ -27,7 +27,15 @@ export const generateAuthToken = (user) =>
 export const verifyAuthToken = (token) => {
   const secret = getJwtSecret();
   try {
-    return jwt.verify(token, secret, { algorithms: ['HS256'] });
+    const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] });
+    if (
+      typeof decoded !== 'object' ||
+      typeof decoded.jti !== 'string' ||
+      !Number.isInteger(decoded.exp)
+    ) {
+      throw new Error('Token tidak valid atau kedaluwarsa');
+    }
+    return decoded;
   } catch {
     throw new Error('Token tidak valid atau kedaluwarsa');
   }

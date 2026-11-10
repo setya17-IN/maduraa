@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import cors from 'cors';
 import { env } from './config/env.js';
 
@@ -12,6 +12,7 @@ import errorHandler from './middlewares/errorHandler.js';
 
 const app = express();
 
+app.set('trust proxy', false);
 app.use(express.json({ limit: '1mb' }));
 app.use(
   cors({
