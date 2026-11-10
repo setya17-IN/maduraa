@@ -7,14 +7,20 @@ export const registerUser = async (req, res) => {
     const { name, email, password } = req.body;
     const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
 
-    if (![name, normalizedEmail, password].every((value) => typeof value === 'string' && value.trim())) {
-      return res.status(400).json({ status: 'error', message: 'Nama, email, dan password wajib diisi!' });
+    if (
+      ![name, normalizedEmail, password].every((value) => typeof value === 'string' && value.trim())
+    ) {
+      return res
+        .status(400)
+        .json({ status: 'error', message: 'Nama, email, dan password wajib diisi!' });
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       return res.status(400).json({ status: 'error', message: 'Format email tidak valid!' });
     }
 
-    const userCheck = await pool.query('SELECT id FROM profiles WHERE LOWER(email) = $1', [normalizedEmail]);
+    const userCheck = await pool.query('SELECT id FROM profiles WHERE LOWER(email) = $1', [
+      normalizedEmail,
+    ]);
     if (userCheck.rows.length > 0) {
       return res.status(409).json({ status: 'error', message: 'Email sudah terdaftar' });
     }
@@ -46,7 +52,9 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ status: 'error', message: 'Email dan password wajib diisi!' });
     }
 
-    const userQuery = await pool.query('SELECT * FROM profiles WHERE LOWER(email) = $1', [normalizedEmail]);
+    const userQuery = await pool.query('SELECT * FROM profiles WHERE LOWER(email) = $1', [
+      normalizedEmail,
+    ]);
     if (userQuery.rows.length === 0) {
       return res.status(401).json({ status: 'error', message: 'Email atau password salah' });
     }

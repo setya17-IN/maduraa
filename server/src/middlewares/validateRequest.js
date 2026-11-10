@@ -155,12 +155,10 @@ export const validateTransaction = (req, res, next) => {
         item.quantity < 1,
     )
   ) {
-    return res
-      .status(400)
-      .json({
-        status: 'error',
-        message: 'Setiap item harus memiliki product_id UUID dan quantity bilangan bulat positif',
-      });
+    return res.status(400).json({
+      status: 'error',
+      message: 'Setiap item harus memiliki product_id UUID dan quantity bilangan bulat positif',
+    });
   }
   return next();
 };

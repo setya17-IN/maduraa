@@ -12,20 +12,22 @@ const seedProducts = async () => {
       'Makanan Ringan & Instan',
       'Minuman',
       'Perawatan Tubuh',
-      'Kebutuhan Rumah Tangga'
+      'Kebutuhan Rumah Tangga',
     ];
 
     const categoryMap = {};
 
     for (const catName of categories) {
       // Cek apakah kategori sudah ada
-      let catResult = await client.query('SELECT id FROM categories WHERE LOWER(name) = LOWER($1)', [catName]);
-      
+      let catResult = await client.query(
+        'SELECT id FROM categories WHERE LOWER(name) = LOWER($1)',
+        [catName],
+      );
+
       if (catResult.rows.length === 0) {
-        catResult = await client.query(
-          'INSERT INTO categories (name) VALUES ($1) RETURNING id',
-          [catName]
-        );
+        catResult = await client.query('INSERT INTO categories (name) VALUES ($1) RETURNING id', [
+          catName,
+        ]);
         console.log(`Kategori "${catName}" berhasil ditambahkan.`);
       } else {
         console.log(`Kategori "${catName}" sudah ada.`);
@@ -38,75 +40,75 @@ const seedProducts = async () => {
       {
         name: 'Beras Premium 5kg',
         category: 'Sembako',
-        purchase_price: 60000.00,
-        selling_price: 65000.00,
+        purchase_price: 60000.0,
+        selling_price: 65000.0,
         stock: 25,
-        unit: 'karung'
+        unit: 'karung',
       },
       {
         name: 'Minyak Goreng 2 Liter',
         category: 'Sembako',
-        purchase_price: 32000.00,
-        selling_price: 36000.00,
+        purchase_price: 32000.0,
+        selling_price: 36000.0,
         stock: 30,
-        unit: 'pouch'
+        unit: 'pouch',
       },
       {
         name: 'Gula Pasir 1kg',
         category: 'Sembako',
-        purchase_price: 15500.00,
-        selling_price: 17500.00,
+        purchase_price: 15500.0,
+        selling_price: 17500.0,
         stock: 40,
-        unit: 'kg'
+        unit: 'kg',
       },
       {
         name: 'Telur Ayam Ras 1kg',
         category: 'Sembako',
-        purchase_price: 25000.00,
-        selling_price: 28000.00,
+        purchase_price: 25000.0,
+        selling_price: 28000.0,
         stock: 20,
-        unit: 'kg'
+        unit: 'kg',
       },
       {
         name: 'Indomie Goreng Special',
         category: 'Makanan Ringan & Instan',
-        purchase_price: 3000.00,
-        selling_price: 3500.00,
+        purchase_price: 3000.0,
+        selling_price: 3500.0,
         stock: 100,
-        unit: 'bungkus'
+        unit: 'bungkus',
       },
       {
         name: 'Kopi Kapal Api Special 160g',
         category: 'Minuman',
-        purchase_price: 12000.00,
-        selling_price: 14000.00,
+        purchase_price: 12000.0,
+        selling_price: 14000.0,
         stock: 35,
-        unit: 'renceng'
+        unit: 'renceng',
       },
       {
         name: 'Teh Celup Sosro Box',
         category: 'Minuman',
-        purchase_price: 7500.00,
-        selling_price: 9000.00,
+        purchase_price: 7500.0,
+        selling_price: 9000.0,
         stock: 45,
-        unit: 'box'
+        unit: 'box',
       },
       {
         name: 'Sabun Mandi Cair Lifebuoy',
         category: 'Perawatan Tubuh',
-        purchase_price: 15000.00,
-        selling_price: 18000.00,
+        purchase_price: 15000.0,
+        selling_price: 18000.0,
         stock: 25,
-        unit: 'botol'
+        unit: 'botol',
       },
       {
         name: 'Deterjen Rinso Molto 800g',
         category: 'Kebutuhan Rumah Tangga',
-        purchase_price: 19000.00,
-        selling_price: 22000.00,
+        purchase_price: 19000.0,
+        selling_price: 22000.0,
         stock: 20,
-        unit: 'pcs'
-      }
+        unit: 'pcs',
+      },
     ];
 
     for (const product of initialProducts) {
@@ -127,7 +129,7 @@ const seedProducts = async () => {
           product.purchase_price,
           product.selling_price,
           product.stock,
-          product.unit
+          product.unit,
         ]);
         console.log(`Produk "${product.name}" berhasil ditambahkan.`);
       } else {
