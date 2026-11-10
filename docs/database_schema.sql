@@ -22,7 +22,7 @@ BEGIN
       AND conrelid = 'public.profiles'::regclass
   ) THEN
     ALTER TABLE public.profiles
-      ADD CONSTRAINT profiles_role_allowed CHECK (role IN ('user', 'admin'));
+      ADD CONSTRAINT profiles_role_allowed CHECK (role IS NOT NULL AND role IN ('user', 'admin'));
   END IF;
 END
 $$;
