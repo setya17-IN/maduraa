@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.revoked_tokens (
 );
 
 CREATE INDEX IF NOT EXISTS idx_revoked_tokens_expires_at ON public.revoked_tokens(expires_at);
-ALTER TABLE public.revoked_tokens ENABLE ROW LEVEL SECURITY;
+
 REVOKE ALL PRIVILEGES ON TABLE public.revoked_tokens FROM PUBLIC, anon, authenticated;
 
 CREATE TABLE IF NOT EXISTS categories (
