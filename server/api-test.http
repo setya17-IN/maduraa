@@ -1,68 +1,192 @@
 @baseUrl = http://localhost:5000/api/v1
-@testEmail = userbaru.baru235@gmail.com
-@testPassword = TestPassword123!
 
-### Register a test cashier account (change the email if this account already exists).
+# Kredensial dibaca dari server/.env (tidak ikut ter-commit)
+@ownerEmail = {{$dotenv OWNER_EMAIL}}
+@ownerPassword = {{$dotenv OWNER_PASSWORD}}
+@cashierEmail = {{$dotenv CASHIER_EMAIL}}
+@cashierPassword = {{$dotenv CASHIER_PASSWORD}}
+
+# Urutan pakai: jalankan "Login owner" dan "Login cashier" dulu,
+# baru request lainnya. Jalankan bagian LOGOUT (7) dan RATE LIMIT (8) paling akhir.
+
+### ==========================================
+### 1. LOGIN BERHASIL
+### ==========================================
+
+### Login owner -> 200, ada token, role = owner
+# @name loginOwner
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{ownerEmail}}",
+  "password": "{{ownerPassword}}"
+}
+
+### Login cashier -> 200, ada token, role = cashier
+# @name loginCashier
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{cashierEmail}}",
+  "password": "{{cashierPassword}}"
+}
+
+@ownerToken = {{loginOwner.response.body.$.token}}
+@cashierToken = {{loginCashier.response.body.$.token}}
+
+### ==========================================
+### 2. LOGIN GAGAL & REGISTER DIHAPUS
+### ==========================================
+
+### Password salah -> 401
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{ownerEmail}}",
+  "password": "PasswordSalah123"
+}
+
+### Email tidak terdaftar -> 401
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "tidakada@example.com",
+  "password": "apapun123"
+}
+
+### Body kosong -> 400
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{}
+
+### Field password hilang -> 400
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{ownerEmail}}"
+}
+
+### Register sudah dihapus -> 404 (atau 405)
 POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
   "name": "Test User",
-  "email": "{{testEmail}}",
-  "password": "{{testPassword}}"
+  "email": "baru@example.com",
+  "password": "Password123!"
 }
 
-### Login
-# @name login
-POST {{baseUrl}}/auth/login
-Content-Type: application/json
+### ==========================================
+### 3. AKSES TERPROTEKSI (AUTH)
+### ==========================================
 
-{
-  "email": "{{testEmail}}",
-  "password": "{{testPassword}}"
-}
-
-### Run login first, then send the protected request.
-@token = {{login.response.body.token}}
-
+### Tanpa token -> 401
 GET {{baseUrl}}/auth/me
-Authorization: Bearer {{token}}
+
+### Token invalid -> 401
+GET {{baseUrl}}/auth/me
+Authorization: Bearer token.ngawur.123
+
+### Token owner valid -> 200, role = owner
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{ownerToken}}
+
+### Token cashier valid -> 200, role = cashier
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{cashierToken}}
 
 ### ==========================================
-### TEST ENDPOINT KATEGORI (PRODUCT CATEGORIES)
+### 4. KATEGORI
 ### ==========================================
 
-### Get All Categories
+### Lihat kategori (owner) -> 200
 GET {{baseUrl}}/categories
-Authorization: Bearer {{token}}
+Authorization: Bearer {{ownerToken}}
 
-### Create Category
+### Lihat kategori (cashier) -> 200
+GET {{baseUrl}}/categories
+Authorization: Bearer {{cashierToken}}
+
+### Buat kategori (owner) -> 201
+# Sesuaikan jika aturan role di kode Anda berbeda
 POST {{baseUrl}}/categories
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{ownerToken}}
 
 {
   "name": "Makanan"
 }
 
+### Buat kategori (cashier) -> 403 jika khusus owner
+POST {{baseUrl}}/categories
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "name": "Minuman"
+}
 
 ### ==========================================
-### TEST ENDPOINT PRODUK (PRODUCTS)
+### 5. PRODUK
 ### ==========================================
 
-### Get All Products
+### Lihat produk (owner) -> 200
 GET {{baseUrl}}/products
-Authorization: Bearer {{token}}
+Authorization: Bearer {{ownerToken}}
 
+### Lihat produk (cashier) -> 200
+GET {{baseUrl}}/products
+Authorization: Bearer {{cashierToken}}
 
 ### ==========================================
-### TEST ENDPOINT TRANSAKSI & REPORT
+### 6. TRANSAKSI & DASHBOARD
 ### ==========================================
 
-### Get Transactions
+### Transaksi (owner) -> 200, semua transaksi
 GET {{baseUrl}}/transactions
-Authorization: Bearer {{token}}
+Authorization: Bearer {{ownerToken}}
 
-### Get Dashboard Summary
+### Transaksi (cashier) -> 200, semua transaksi (sesuai PR #39)
+GET {{baseUrl}}/transactions
+Authorization: Bearer {{cashierToken}}
+
+### Dashboard (owner) -> 200
 GET {{baseUrl}}/dashboard/summary
-Authorization: Bearer {{token}}
+Authorization: Bearer {{ownerToken}}
+
+### Dashboard (cashier) -> 403 jika khusus owner
+GET {{baseUrl}}/dashboard/summary
+Authorization: Bearer {{cashierToken}}
+
+### ==========================================
+### 7. LOGOUT & TOKEN DIREVOKASI (jalankan setelah bagian lain)
+### ==========================================
+
+### Logout cashier -> 200
+# Sesuaikan path jika endpoint logout Anda berbeda
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{cashierToken}}
+
+### Pakai token cashier yang sudah logout -> 401
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{cashierToken}}
+
+### ==========================================
+### 8. RATE LIMIT LOGIN (jalankan paling akhir)
+### ==========================================
+# Kirim request ini berkali-kali berturut-turut.
+# Setelah batas terlewati, harus muncul 429.
+# Setelah itu login bisa terblokir sementara; tunggu sebelum login lagi.
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{ownerEmail}}",
+  "password": "PasswordSalah123"
+}
