@@ -28,7 +28,7 @@ export const registerUser = async (req, res) => {
     const hashedPassword = await hashPassword(password);
     const newUser = await pool.query(
       'INSERT INTO profiles (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
-      [name.trim(), normalizedEmail, hashedPassword, 'user'],
+      [name.trim(), normalizedEmail, hashedPassword, 'cashier'],
     );
 
     return res.status(201).json({

@@ -22,7 +22,7 @@ router.get('/:id', verifyToken, validateIdParam, getProductById);
 router.post(
   '/',
   verifyToken,
-  authorizeRoles('admin'),
+  authorizeRoles('owner'),
   validateRequired(['name', 'selling_price']),
   validateProduct,
   createProduct,
@@ -30,11 +30,11 @@ router.post(
 router.put(
   '/:id',
   verifyToken,
-  authorizeRoles('admin'),
+  authorizeRoles('owner'),
   validateIdParam,
   validateProduct,
   updateProduct,
 );
-router.delete('/:id', verifyToken, authorizeRoles('admin'), validateIdParam, deleteProduct);
+router.delete('/:id', verifyToken, authorizeRoles('owner'), validateIdParam, deleteProduct);
 
 export default router;

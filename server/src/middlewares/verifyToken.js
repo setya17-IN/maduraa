@@ -23,6 +23,9 @@ const verifyToken = async (req, res, next) => {
         .status(401)
         .json({ status: 'error', message: 'Token tidak valid atau kedaluwarsa!' });
     }
+    if (!['owner', 'cashier'].includes(decoded.role)) {
+      return res.status(403).json({ status: 'error', message: 'Role tidak diizinkan.' });
+    }
 
     const revoked = await pool.query(
       'SELECT 1 FROM revoked_tokens WHERE jti = $1 AND expires_at > NOW()',

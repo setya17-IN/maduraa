@@ -44,7 +44,7 @@ Request:
 }
 ```
 
-`name` harus berisi 2–100 karakter, email harus valid, dan password harus berisi 8–72 karakter. Backend meng-hash password sebelum disimpan. Akun registrasi selalu diberi role `user`; role yang dikirim pemanggil diabaikan. Promosi ke `admin` harus dilakukan melalui proses administratif tepercaya, bukan endpoint publik.
+`name` harus berisi 2–100 karakter, email harus valid, dan password harus berisi 8–72 karakter. Backend meng-hash password sebelum disimpan. Akun registrasi selalu diberi role `cashier`; role yang dikirim pemanggil diabaikan. Promosi ke `owner` harus dilakukan melalui proses administratif tepercaya, bukan endpoint publik.
 
 Response `201`:
 
@@ -56,7 +56,7 @@ Response `201`:
     "id": "<uuid>",
     "name": "Nama Pengguna",
     "email": "user@example.com",
-    "role": "user"
+    "role": "cashier"
   }
 }
 ```
@@ -80,7 +80,7 @@ Response `200`:
     "id": "<uuid>",
     "name": "Nama Pengguna",
     "email": "user@example.com",
-    "role": "user"
+    "role": "cashier"
   }
 }
 ```
@@ -99,7 +99,7 @@ Response `200`:
   "user": {
     "id": "<uuid>",
     "email": "user@example.com",
-    "role": "user",
+    "role": "cashier",
     "iat": 0,
     "exp": 0,
     "jti": "<uuid>"
@@ -121,7 +121,7 @@ Token dicabut di tabel `revoked_tokens` dan tidak dapat digunakan kembali. Login
 
 ## Categories
 
-Semua endpoint kategori memerlukan Bearer token. Membuat, mengubah, dan menghapus kategori hanya untuk role `admin`.
+Semua endpoint kategori memerlukan Bearer token. Membuat, mengubah, dan menghapus kategori hanya untuk role `owner`.
 
 | Method | Endpoint          | Fungsi                                      |
 | ------ | ----------------- | ------------------------------------------- |
@@ -140,7 +140,7 @@ Nama wajib diisi. Nama duplikat (tanpa membedakan huruf besar/kecil) menghasilka
 
 ## Products
 
-Semua endpoint produk memerlukan Bearer token. Membuat, mengubah, dan menghapus produk hanya untuk role `admin`. Daftar produk dan transaksi membatasi `limit` maksimal 100.
+Semua endpoint produk memerlukan Bearer token. Membuat, mengubah, dan menghapus produk hanya untuk role `owner`. Daftar produk dan transaksi membatasi `limit` maksimal 100.
 
 | Method | Endpoint        | Fungsi                                        |
 | ------ | --------------- | --------------------------------------------- |
@@ -226,11 +226,11 @@ Request:
 
 ### Membaca transaksi
 
-`GET /transactions` menerima query `page` (default `1`) dan `limit` (default `20`, maksimal `100`). Pengguna role `user` hanya dapat melihat transaksi miliknya; `admin` dapat melihat semua transaksi. Aturan yang sama berlaku untuk `GET /transactions/:id`. Response menempatkan array di `data.transactions` dan pagination di `data.pagination`.
+`GET /transactions` menerima query `page` (default `1`) dan `limit` (default `20`, maksimal `100`). Role `owner` dan `cashier` dapat melihat semua transaksi, termasuk transaksi yang dibuat role lain. `transactions.user_id` tetap mencatat pengguna yang membuat transaksi. Aturan yang sama berlaku untuk `GET /transactions/:id`. Response menempatkan array di `data.transactions` dan pagination di `data.pagination`.
 
 ## Dashboard dan laporan
 
-Kedua endpoint memerlukan Bearer token dan role `admin`.
+Kedua endpoint memerlukan Bearer token dan role `owner`.
 
 | Method | Endpoint             | Fungsi                                                                              |
 | ------ | -------------------- | ----------------------------------------------------------------------------------- |
@@ -258,6 +258,6 @@ Token tidak ada atau tidak valid menghasilkan `401`; role yang tidak diizinkan m
 ## Belum tersedia
 
 - `/auth/session` belum memiliki route. Logout tersedia melalui `/auth/logout` dan memerlukan tabel `revoked_tokens`.
-- Role `admin` diberikan melalui proses administratif tepercaya; registrasi publik selalu membuat role `user`.
+- Role `owner` diberikan melalui proses administratif tepercaya; registrasi publik selalu membuat role `cashier`.
 - Query laporan memvalidasi jenis periode dan pasangan tanggal ISO, menolak rentang terbalik, dan tidak menerima `type` bersamaan dengan rentang tanggal.
 - Upload foto produk belum tersedia sebagai endpoint; produk hanya menerima `image_url`.

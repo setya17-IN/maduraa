@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   name VARCHAR,
   email VARCHAR UNIQUE,
   password VARCHAR,
-  role VARCHAR DEFAULT 'user'
+  role VARCHAR DEFAULT 'cashier'
 );
 
 -- Keep the role constraint addition safe to rerun.
@@ -22,7 +22,7 @@ BEGIN
       AND conrelid = 'public.profiles'::regclass
   ) THEN
     ALTER TABLE public.profiles
-      ADD CONSTRAINT profiles_role_allowed CHECK (role IS NOT NULL AND role IN ('user', 'admin'));
+      ADD CONSTRAINT profiles_role_allowed CHECK (role IS NOT NULL AND role IN ('cashier', 'owner'));
   END IF;
 END
 $$;

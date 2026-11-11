@@ -15,15 +15,15 @@ import {
 const router = express.Router();
 
 router.get('/', verifyToken, getCategories);
-router.post('/', verifyToken, authorizeRoles('admin'), validateCategory, createCategory);
+router.post('/', verifyToken, authorizeRoles('owner'), validateCategory, createCategory);
 router.put(
   '/:id',
   verifyToken,
-  authorizeRoles('admin'),
+  authorizeRoles('owner'),
   validateIdParam,
   validateCategory,
   updateCategory,
 );
-router.delete('/:id', verifyToken, authorizeRoles('admin'), validateIdParam, deleteCategory);
+router.delete('/:id', verifyToken, authorizeRoles('owner'), validateIdParam, deleteCategory);
 
 export default router;

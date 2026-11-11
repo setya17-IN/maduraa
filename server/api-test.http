@@ -2,7 +2,7 @@
 @testEmail = userbaru.baru235@gmail.com
 @testPassword = TestPassword123!
 
-### Register a test account (change the email if this account already exists).
+### Register a test cashier account (change the email if this account already exists).
 POST {{baseUrl}}/auth/register
 Content-Type: application/json
 

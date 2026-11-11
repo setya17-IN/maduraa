@@ -35,7 +35,7 @@ describe('password security', () => {
 
 describe('authentication token', () => {
   it('signs a JWT with user claims and a 24 hour expiry', () => {
-    const user = { id: 42, email: 'user@example.com', role: 'user', password: 'must-not-leak' };
+    const user = { id: 42, email: 'user@example.com', role: 'cashier', password: 'must-not-leak' };
     const token = generateAuthToken(user);
     const decoded = verifyAuthToken(token);
 
@@ -47,7 +47,7 @@ describe('authentication token', () => {
   });
 
   it('rejects a token signed with a different secret', () => {
-    const token = generateAuthToken({ id: 1, email: 'user@example.com', role: 'user' });
+    const token = generateAuthToken({ id: 1, email: 'user@example.com', role: 'cashier' });
     process.env.JWT_SECRET = 'different-unit-test-secret-at-least-32-characters-long';
 
     try {

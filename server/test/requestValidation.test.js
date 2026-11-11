@@ -36,7 +36,7 @@ describe('request validation', () => {
         name: 'Test User',
         email: 'user@example.com',
         password: 'long-enough-password',
-        role: 'admin',
+        role: 'owner',
       },
     });
     assert.equal(valid.passed, true);
@@ -68,8 +68,8 @@ describe('request validation', () => {
   });
 
   it('enforces role checks and report date ranges', () => {
-    assert.equal(run(authorizeRoles('admin'), { user: { role: 'user' } }).statusCode, 403);
-    assert.equal(run(authorizeRoles('admin'), { user: { role: 'admin' } }).passed, true);
+    assert.equal(run(authorizeRoles('owner'), { user: { role: 'cashier' } }).statusCode, 403);
+    assert.equal(run(authorizeRoles('owner'), { user: { role: 'owner' } }).passed, true);
     assert.equal(
       run(validateReportQuery, { query: { start_date: '2026-02-30', end_date: '2026-03-01' } })
         .statusCode,
