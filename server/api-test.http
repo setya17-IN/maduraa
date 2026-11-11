@@ -32,7 +32,7 @@ Content-Type: application/json
   "email": "{{cashierEmail}}",
   "password": "{{cashierPassword}}"
 }
-
+###
 @ownerToken = {{loginOwner.response.body.$.token}}
 @cashierToken = {{loginCashier.response.body.$.token}}
 
@@ -72,7 +72,7 @@ Content-Type: application/json
   "email": "{{ownerEmail}}"
 }
 
-### Register sudah dihapus -> 404 (atau 405)
+### Register masih aktif -> 201 (atau 409 jika email sudah terdaftar)
 POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
