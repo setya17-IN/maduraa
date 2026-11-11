@@ -72,7 +72,7 @@ Content-Type: application/json
   "email": "{{ownerEmail}}"
 }
 
-### Register masih aktif -> 201 (atau 409 jika email sudah terdaftar)
+### Register harus 404 (atau 405)
 POST {{baseUrl}}/auth/register
 Content-Type: application/json
 

@@ -1,48 +1,6 @@
 ﻿import pool from '../config/db.js';
 import { errorResponse } from '../utils/responseHelper.js';
-import { generateAuthToken, hashPassword, verifyPassword } from '../utils/authSecurity.js';
-
-export const registerUser = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
-
-    if (
-      ![name, normalizedEmail, password].every((value) => typeof value === 'string' && value.trim())
-    ) {
-      return res
-        .status(400)
-        .json({ status: 'error', message: 'Nama, email, dan password wajib diisi!' });
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      return res.status(400).json({ status: 'error', message: 'Format email tidak valid!' });
-    }
-
-    const userCheck = await pool.query('SELECT id FROM profiles WHERE LOWER(email) = $1', [
-      normalizedEmail,
-    ]);
-    if (userCheck.rows.length > 0) {
-      return res.status(409).json({ status: 'error', message: 'Email sudah terdaftar' });
-    }
-
-    const hashedPassword = await hashPassword(password);
-    const newUser = await pool.query(
-      'INSERT INTO profiles (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
-      [name.trim(), normalizedEmail, hashedPassword, 'cashier'],
-    );
-
-    return res.status(201).json({
-      status: 'success',
-      message: 'Registrasi berhasil! Silakan login.',
-      data: newUser.rows[0],
-    });
-  } catch (error) {
-    if (error.code === '23505') {
-      return res.status(409).json({ status: 'error', message: 'Email sudah terdaftar' });
-    }
-    return errorResponse(res, error.message);
-  }
-};
+import { generateAuthToken, verifyPassword } from '../utils/authSecurity.js';
 
 export const loginUser = async (req, res) => {
   try {

@@ -68,6 +68,27 @@ describe('HTTP API middleware integration', () => {
     assert.equal(invalid.status, 401);
   });
 
+  it('rejects expired bearer tokens', async () => {
+    const expiredToken = jwt.sign(
+      { id: 'a3bb189e-8bf9-3888-9912-ace4e6543002', role: 'owner' },
+      process.env.JWT_SECRET,
+      { algorithm: 'HS256', expiresIn: -1, jwtid: 'expired-test-token' },
+    );
+    const response = await fetch(`${baseUrl}/products`, {
+      headers: { Authorization: `Bearer ${expiredToken}` },
+    });
+    assert.equal(response.status, 401);
+  });
+
+  it('returns 404 for the removed registration endpoint', async () => {
+    const response = await fetch(`${baseUrl}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Test User', email: 'test@example.com', password: 'password' }),
+    });
+    assert.equal(response.status, 404);
+  });
+
   it('rejects a token whose jti is present in revoked_tokens', async () => {
     const token = tokenFor('cashier');
     revokedJtiForTest = jwt.decode(token).jti;

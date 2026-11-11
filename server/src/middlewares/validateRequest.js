@@ -46,26 +46,6 @@ export const authorizeRoles =
     return next();
   };
 
-export const validateRegistration = (req, res, next) => {
-  const { name, email, password } = req.body || {};
-  if (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 100) {
-    return res.status(400).json({ status: 'error', message: 'Nama harus berisi 2–100 karakter' });
-  }
-  if (
-    typeof email !== 'string' ||
-    email.length > 254 ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
-  ) {
-    return res.status(400).json({ status: 'error', message: 'Format email tidak valid' });
-  }
-  if (typeof password !== 'string' || password.length < 8 || password.length > 72) {
-    return res
-      .status(400)
-      .json({ status: 'error', message: 'Password harus berisi 8–72 karakter' });
-  }
-  return next();
-};
-
 export const validateLogin = (req, res, next) => {
   const { email, password } = req.body || {};
   if (typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) {

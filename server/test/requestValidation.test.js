@@ -6,7 +6,6 @@ import {
   validateLogin,
   validatePagination,
   validateProduct,
-  validateRegistration,
   validateReportQuery,
   validateTransaction,
 } from '../src/middlewares/validateRequest.js';
@@ -30,23 +29,6 @@ const run = (middleware, req) => {
 };
 
 describe('request validation', () => {
-  it('validates registration fields even when the request includes a role', () => {
-    const valid = run(validateRegistration, {
-      body: {
-        name: 'Test User',
-        email: 'user@example.com',
-        password: 'long-enough-password',
-        role: 'owner',
-      },
-    });
-    assert.equal(valid.passed, true);
-
-    const invalid = run(validateRegistration, {
-      body: { name: 'T', email: 'wrong', password: 'short' },
-    });
-    assert.equal(invalid.statusCode, 400);
-  });
-
   it('rejects malformed login and out of range pagination', () => {
     assert.equal(run(validateLogin, { body: { email: '', password: 'x' } }).statusCode, 400);
     assert.equal(run(validatePagination, { query: { limit: '101' } }).statusCode, 400);
@@ -70,6 +52,7 @@ describe('request validation', () => {
   it('enforces role checks and report date ranges', () => {
     assert.equal(run(authorizeRoles('owner'), { user: { role: 'cashier' } }).statusCode, 403);
     assert.equal(run(authorizeRoles('owner'), { user: { role: 'owner' } }).passed, true);
+    assert.equal(run(authorizeRoles('owner'), {}).statusCode, 403);
     assert.equal(
       run(validateReportQuery, { query: { start_date: '2026-02-30', end_date: '2026-03-01' } })
         .statusCode,
