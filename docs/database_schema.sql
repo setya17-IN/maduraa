@@ -2,6 +2,7 @@
 -- This file describes the expected structure; it does not modify the live project.
 -- Review existing columns, constraints, grants, and RLS policies before applying SQL.
 
+-- `profiles` is this application's users table and stores each user's role.
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -11,13 +12,28 @@ CREATE TABLE IF NOT EXISTS profiles (
   role VARCHAR DEFAULT 'user'
 );
 
+-- Keep the role constraint addition safe to rerun.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'profiles_role_allowed'
+      AND conrelid = 'public.profiles'::regclass
+  ) THEN
+    ALTER TABLE public.profiles
+      ADD CONSTRAINT profiles_role_allowed CHECK (role IS NOT NULL AND role IN ('user', 'admin'));
+  END IF;
+END
+$$;
+
 -- JWT IDs are recorded here on logout so protected routes can reject revoked tokens.
-CREATE TABLE IF NOT EXISTS revoked_tokens (
+CREATE TABLE IF NOT EXISTS public.revoked_tokens (
   jti TEXT PRIMARY KEY,
   expires_at TIMESTAMPTZ NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_revoked_tokens_expires_at ON revoked_tokens(expires_at);
+CREATE INDEX IF NOT EXISTS idx_revoked_tokens_expires_at ON public.revoked_tokens(expires_at);
 ALTER TABLE public.revoked_tokens ENABLE ROW LEVEL SECURITY;
 REVOKE ALL PRIVILEGES ON TABLE public.revoked_tokens FROM PUBLIC, anon, authenticated;
 
@@ -44,6 +60,29 @@ CREATE TABLE IF NOT EXISTS products (
 ALTER TABLE products
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
+-- Keep the stock constraint addition safe to rerun.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'products_stock_nonnegative'
+      AND conrelid = 'public.products'::regclass
+  ) THEN
+    ALTER TABLE public.products
+      ADD CONSTRAINT products_stock_nonnegative CHECK (stock >= 0);
+  END IF;
+END
+$$;
+
+-- RLS is enabled on tables that are not read directly through the client Data API.
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+
+-- Direct client access to transactions is currently used by the frontend, so its RLS
+-- change is deferred until matching policies and frontend behavior are ready.
+-- Do not enable RLS on public.transactions in this script.
 CREATE TABLE IF NOT EXISTS transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id),
@@ -60,6 +99,23 @@ CREATE TABLE IF NOT EXISTS transaction_items (
   price NUMERIC NOT NULL,
   subtotal NUMERIC NOT NULL
 );
+
+-- Keep the quantity constraint addition safe to rerun.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'transaction_items_quantity_positive'
+      AND conrelid = 'public.transaction_items'::regclass
+  ) THEN
+    ALTER TABLE public.transaction_items
+      ADD CONSTRAINT transaction_items_quantity_positive CHECK (quantity > 0);
+  END IF;
+END
+$$;
+
+ALTER TABLE public.transaction_items ENABLE ROW LEVEL SECURITY;
 
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);

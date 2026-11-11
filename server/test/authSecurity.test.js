@@ -51,7 +51,9 @@ describe('authentication token', () => {
     process.env.JWT_SECRET = 'different-unit-test-secret-at-least-32-characters-long';
 
     try {
-      assert.throws(() => verifyAuthToken(token), { message: 'Token tidak valid atau kedaluwarsa' });
+      assert.throws(() => verifyAuthToken(token), {
+        message: 'Token tidak valid atau kedaluwarsa',
+      });
     } finally {
       process.env.JWT_SECRET = testSecret;
     }

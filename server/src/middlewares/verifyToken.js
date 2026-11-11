@@ -7,7 +7,9 @@ const verifyToken = async (req, res, next) => {
   const [scheme, token, ...extra] = authHeader?.trim().split(/\s+/) ?? [];
 
   if (scheme?.toLowerCase() !== 'bearer' || !token || extra.length > 0) {
-    return res.status(401).json({ status: 'error', message: 'Akses ditolak, token tidak ditemukan!' });
+    return res
+      .status(401)
+      .json({ status: 'error', message: 'Akses ditolak, token tidak ditemukan!' });
   }
 
   try {
@@ -17,7 +19,9 @@ const verifyToken = async (req, res, next) => {
       typeof decoded.jti !== 'string' ||
       !Number.isInteger(decoded.exp)
     ) {
-      return res.status(401).json({ status: 'error', message: 'Token tidak valid atau kedaluwarsa!' });
+      return res
+        .status(401)
+        .json({ status: 'error', message: 'Token tidak valid atau kedaluwarsa!' });
     }
 
     const revoked = await pool.query(
@@ -25,14 +29,18 @@ const verifyToken = async (req, res, next) => {
       [decoded.jti],
     );
     if (revoked.rowCount > 0) {
-      return res.status(401).json({ status: 'error', message: 'Token sudah dicabut. Silakan login kembali.' });
+      return res
+        .status(401)
+        .json({ status: 'error', message: 'Token sudah dicabut. Silakan login kembali.' });
     }
 
     req.user = decoded;
     return next();
   } catch (error) {
     if (['JsonWebTokenError', 'TokenExpiredError', 'NotBeforeError'].includes(error.name)) {
-      return res.status(401).json({ status: 'error', message: 'Token tidak valid atau kedaluwarsa!' });
+      return res
+        .status(401)
+        .json({ status: 'error', message: 'Token tidak valid atau kedaluwarsa!' });
     }
     return res.status(500).json({ status: 'error', message: 'Verifikasi token gagal.' });
   }
