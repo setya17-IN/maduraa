@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { after, describe, it } from 'node:test';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import {
   generateAuthToken,
   hashPassword,
@@ -57,5 +58,23 @@ describe('authentication token', () => {
     } finally {
       process.env.JWT_SECRET = testSecret;
     }
+  });
+
+  it('rejects a malformed token', () => {
+    assert.throws(() => verifyAuthToken('not.a.valid-jwt'), {
+      message: 'Token tidak valid atau kedaluwarsa',
+    });
+  });
+
+  it('rejects an expired token', () => {
+    const token = jwt.sign(
+      { id: 1, email: 'user@example.com', role: 'cashier' },
+      testSecret,
+      { algorithm: 'HS256', expiresIn: -1, jwtid: 'expired-unit-test-token' },
+    );
+
+    assert.throws(() => verifyAuthToken(token), {
+      message: 'Token tidak valid atau kedaluwarsa',
+    });
   });
 });
