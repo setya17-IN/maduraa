@@ -2,7 +2,10 @@
 -- This file describes the expected structure; it does not modify the live project.
 -- Review existing columns, constraints, grants, and RLS policies before applying SQL.
 
--- `profiles` is this application's users table and stores each user's role.
+-- `profiles` stores the two provisioned account roles: owner and cashier.
+-- There is no public registration endpoint; create missing accounts with
+-- `server/src/database/seedUsers.js`. Password values must be bcrypt hashes.
+-- The seed script leaves existing passwords unchanged unless passed --reset-password.
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMPTZ DEFAULT NOW(),

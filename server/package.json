@@ -7,6 +7,7 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "db:create-revoked-tokens": "node src/database/createRevokedTokensTable.js",
+    "db:seed-users": "node src/database/seedUsers.js",
     "test": "node --test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

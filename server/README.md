@@ -23,7 +23,7 @@ npm run dev
 
 Gunakan `npm start` untuk menjalankan tanpa mode watch. Jangan commit file `.env` atau credential nyata.
 
-Pendaftaran publik selalu membuat akun dengan role `cashier`. Endpoint mutasi katalog serta dashboard/laporan memerlukan role `owner`; berikan role tersebut hanya melalui proses administratif tepercaya.
+Akun tidak dapat mendaftar sendiri. Buat akun `owner` dan `cashier` melalui `npm run db:seed-users`; skrip membaca `OWNER_EMAIL`, `OWNER_PASSWORD`, `CASHIER_EMAIL`, dan `CASHIER_PASSWORD` dari `server/.env`. Akun yang sudah ada tidak diubah. Gunakan `npm run db:seed-users -- --reset-password` hanya jika memang ingin mengganti password akun yang ada. Endpoint mutasi katalog serta dashboard/laporan memerlukan role `owner`.
 
 Sebelum menggunakan logout JWT, siapkan tabel revokasi token dengan `npm run db:create-revoked-tokens` atau terapkan definisi `revoked_tokens` di `docs/database_schema.sql`. Login dibatasi hingga 10 percobaan gagal dari IP yang sama dalam 15 menit; percobaan login yang berhasil tidak dihitung.
 
