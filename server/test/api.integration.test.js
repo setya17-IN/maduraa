@@ -89,6 +89,13 @@ describe('HTTP API middleware integration', () => {
     assert.equal(response.status, 403);
   });
 
+  it('rejects a valid token with an unknown role', async () => {
+    const response = await fetch(`${baseUrl}/products`, {
+      headers: { Authorization: `Bearer ${tokenFor('manager')}` },
+    });
+    assert.equal(response.status, 403);
+  });
+
   it('validates protected route input before database access', async () => {
     const response = await fetch(`${baseUrl}/products`, {
       method: 'POST',
