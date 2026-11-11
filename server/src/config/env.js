@@ -20,6 +20,7 @@ export const env = Object.freeze({
   port,
   jwtSecret: process.env.JWT_SECRET,
   databaseUrl: process.env.DATABASE_URL,
+  databaseCa: process.env.DATABASE_CA,
   databaseSsl: process.env.DATABASE_SSL !== 'false',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   nodeEnv: process.env.NODE_ENV || 'development',
