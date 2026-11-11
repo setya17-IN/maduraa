@@ -5,6 +5,6 @@ import { authorizeRoles } from '../middlewares/validateRequest.js';
 
 const router = express.Router();
 
-router.get('/summary', verifyToken, authorizeRoles('admin'), getDashboardSummary);
+router.get('/summary', verifyToken, authorizeRoles('owner'), getDashboardSummary);
 
 export default router;

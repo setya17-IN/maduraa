@@ -69,7 +69,7 @@ describe('HTTP API middleware integration', () => {
   });
 
   it('rejects a token whose jti is present in revoked_tokens', async () => {
-    const token = tokenFor('user');
+    const token = tokenFor('cashier');
     revokedJtiForTest = jwt.decode(token).jti;
 
     try {
@@ -82,9 +82,9 @@ describe('HTTP API middleware integration', () => {
     }
   });
 
-  it('blocks regular users from admin routes before database access', async () => {
+  it('blocks cashiers from owner routes before database access', async () => {
     const response = await fetch(`${baseUrl}/dashboard/summary`, {
-      headers: { Authorization: `Bearer ${tokenFor('user')}` },
+      headers: { Authorization: `Bearer ${tokenFor('cashier')}` },
     });
     assert.equal(response.status, 403);
   });
@@ -93,7 +93,7 @@ describe('HTTP API middleware integration', () => {
     const response = await fetch(`${baseUrl}/products`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenFor('admin')}`,
+        Authorization: `Bearer ${tokenFor('owner')}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ name: 'Product', selling_price: -1 }),

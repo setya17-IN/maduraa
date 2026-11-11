@@ -5,6 +5,6 @@ import { authorizeRoles, validateReportQuery } from '../middlewares/validateRequ
 
 const router = express.Router();
 
-router.get('/sales', verifyToken, authorizeRoles('admin'), validateReportQuery, getSalesReport);
+router.get('/sales', verifyToken, authorizeRoles('owner'), validateReportQuery, getSalesReport);
 
 export default router;

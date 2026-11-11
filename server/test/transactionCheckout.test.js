@@ -12,7 +12,7 @@ const [{ default: app }, { default: pool }, { generateAuthToken }] = await Promi
 
 const productId = 'a3bb189e-8bf9-3888-9912-ace4e6543002';
 const userId = 'b3bb189e-8bf9-3888-9912-ace4e6543003';
-const token = generateAuthToken({ id: userId, email: 'user@example.com', role: 'user' });
+const token = generateAuthToken({ id: userId, email: 'user@example.com', role: 'cashier' });
 
 let server;
 let baseUrl;

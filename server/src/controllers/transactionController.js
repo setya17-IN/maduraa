@@ -121,17 +121,17 @@ export const getTransactions = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const offset = (page - 1) * limit;
 
-    const isAdmin = req.user.role === 'admin';
+    const isOwner = req.user.role === 'owner';
     const countResult = await pool.query(
-      isAdmin
+      isOwner
         ? 'SELECT COUNT(*) AS total FROM transactions'
         : 'SELECT COUNT(*) AS total FROM transactions WHERE user_id = $1',
-      isAdmin ? [] : [req.user.id],
+      isOwner ? [] : [req.user.id],
     );
     const total = parseInt(countResult.rows[0].total);
 
     // Fetch transactions
-    const transactions = isAdmin
+    const transactions = isOwner
       ? await pool.query('SELECT * FROM transactions ORDER BY created_at DESC LIMIT $1 OFFSET $2', [
           limit,
           offset,
@@ -178,7 +178,7 @@ export const getTransactionById = async (req, res) => {
     const { id } = req.params;
 
     const transaction =
-      req.user.role === 'admin'
+      req.user.role === 'owner'
         ? await pool.query('SELECT * FROM transactions WHERE id = $1', [id])
         : await pool.query('SELECT * FROM transactions WHERE id = $1 AND user_id = $2', [
             id,
