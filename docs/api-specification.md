@@ -25,41 +25,13 @@ Contoh response `200`:
 
 ## Authentication
 
-| Method | Endpoint         | Auth         | Fungsi                              |
-| ------ | ---------------- | ------------ | ----------------------------------- |
-| POST   | `/auth/register` | Tidak        | Membuat akun                        |
-| POST   | `/auth/login`    | Tidak        | Login dan memperoleh JWT            |
-| GET    | `/auth/me`       | Bearer token | Mengambil klaim pengguna dari token |
-| POST   | `/auth/logout`  | Bearer token | Mencabut token di tabel `revoked_tokens` |
+| Method | Endpoint       | Auth         | Fungsi                              |
+| ------ | -------------- | ------------ | ----------------------------------- |
+| POST   | `/auth/login`  | Tidak        | Login dan memperoleh JWT            |
+| GET    | `/auth/me`     | Bearer token | Mengambil klaim pengguna dari token |
+| POST   | `/auth/logout` | Bearer token | Mencabut token di tabel `revoked_tokens` |
 
-### `POST /auth/register`
-
-Request:
-
-```json
-{
-  "name": "Nama Pengguna",
-  "email": "user@example.com",
-  "password": "password-rahasia"
-}
-```
-
-`name` harus berisi 2–100 karakter, email harus valid, dan password harus berisi 8–72 karakter. Backend meng-hash password sebelum disimpan. Akun registrasi selalu diberi role `cashier`; role yang dikirim pemanggil diabaikan. Promosi ke `owner` harus dilakukan melalui proses administratif tepercaya, bukan endpoint publik.
-
-Response `201`:
-
-```json
-{
-  "status": "success",
-  "message": "Registrasi berhasil! Silakan login.",
-  "data": {
-    "id": "<uuid>",
-    "name": "Nama Pengguna",
-    "email": "user@example.com",
-    "role": "cashier"
-  }
-}
-```
+Akun publik tidak dapat mendaftar. Satu akun `owner` dan satu akun `cashier` diprovisikan melalui `server/src/database/seedUsers.js`, menggunakan email dan password dari environment. Seeder membuat akun yang belum ada, menyimpan password bcrypt, dan tidak mengubah password yang sudah ada kecuali dijalankan dengan `--reset-password`. Request `POST /auth/register` menghasilkan `404`.
 
 ### `POST /auth/login`
 
@@ -85,7 +57,7 @@ Response `200`:
 }
 ```
 
-Kredensial yang tidak cocok menghasilkan `401`. Field wajib yang kosong menghasilkan `400`.
+Kredensial yang tidak cocok menghasilkan `401`. Field wajib yang kosong menghasilkan `400`. Login berhasil mengeluarkan JWT dengan klaim `id`, `email`, `role`, `iat`, `exp`, dan `jti`.
 Setelah 10 percobaan login gagal dari IP yang sama dalam 15 menit, endpoint membalas `429`; login yang berhasil tidak dihitung.
 
 ### `GET /auth/me`
@@ -241,15 +213,27 @@ Dashboard response `data` memuat `today_revenue`, `month_revenue`, `today_transa
 
 Laporan menerima salah satu query `type=daily`, `type=weekly`, atau `type=monthly` (default `monthly`), atau pasangan `start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`. Response `data` memuat `period`, `total_revenue`, `total_transactions`, `total_profit_estimate`, `daily_breakdown`, dan `top_products`.
 
+## Akses berdasarkan role
+
+| Role | Endpoint yang dapat diakses |
+| ---- | --------------------------- |
+| `owner` | Semua endpoint, termasuk `POST/PUT/DELETE /categories`, `POST/PUT/DELETE /products`, `GET /dashboard/summary`, dan `GET /reports/sales`. |
+| `cashier` | Auth (`POST /auth/login`, `GET /auth/me`, `POST /auth/logout`), baca kategori/produk (`GET /categories`, `GET /products`, `GET /products/:id`), dan transaksi (`POST/GET /transactions`, `GET /transactions/:id`). |
+
+Operasi tulis kategori/produk dan dashboard/laporan yang dicoba oleh cashier dibalas `403`. Kedua role dapat membaca dan membuat transaksi.
+
+Tanpa bearer token, token invalid/kedaluwarsa, atau token yang sudah dicabut, endpoint terlindungi membalas `401`.
+
 ## Error dan status umum
 
 | Status | Arti umum                                    |
 | ------ | -------------------------------------------- |
 | 400    | Input tidak valid atau field wajib tidak ada |
+| 201    | Resource berhasil dibuat (misalnya transaksi) |
 | 401    | Token tidak ada, tidak valid, kedaluwarsa, dicabut, atau kredensial login salah |
 | 403    | Role tidak berhak mengakses endpoint         |
 | 429    | Terlalu banyak percobaan login               |
-| 404    | Endpoint atau record tidak ditemukan         |
+| 404    | Endpoint atau record tidak ditemukan; termasuk `POST /auth/register` |
 | 409    | Konflik, seperti nama kategori duplikat      |
 | 500    | Kesalahan server atau database               |
 
@@ -258,6 +242,6 @@ Token tidak ada atau tidak valid menghasilkan `401`; role yang tidak diizinkan m
 ## Belum tersedia
 
 - `/auth/session` belum memiliki route. Logout tersedia melalui `/auth/logout` dan memerlukan tabel `revoked_tokens`.
-- Role `owner` diberikan melalui proses administratif tepercaya; registrasi publik selalu membuat role `cashier`.
+- Akun `owner` dan `cashier` dibuat melalui skrip seed lokal; tidak ada registrasi publik.
 - Query laporan memvalidasi jenis periode dan pasangan tanggal ISO, menolak rentang terbalik, dan tidak menerima `type` bersamaan dengan rentang tanggal.
 - Upload foto produk belum tersedia sebagai endpoint; produk hanya menerima `image_url`.
