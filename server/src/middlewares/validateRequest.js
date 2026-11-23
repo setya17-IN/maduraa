@@ -82,7 +82,10 @@ export const validateProduct = (req, res, next) => {
       .json({ status: 'error', message: 'Nama produk wajib berupa teks maksimal 150 karakter' });
   }
   for (const key of ['selling_price', 'purchase_price']) {
-    if (body[key] !== undefined && (!Number.isFinite(Number(body[key])) || Number(body[key]) < 0)) {
+    if (
+      body[key] !== undefined &&
+      (typeof body[key] !== 'number' || !Number.isFinite(body[key]) || body[key] < 0)
+    ) {
       return res
         .status(400)
         .json({ status: 'error', message: `${key} harus berupa angka non-negatif` });

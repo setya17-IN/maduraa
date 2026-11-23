@@ -119,12 +119,6 @@ export const updateProduct = async (req, res) => {
       image_url: req.body.image_url,
     };
 
-    // Cek apakah produk ada
-    const productCheck = await pool.query('SELECT id FROM products WHERE id = $1', [id]);
-    if (productCheck.rows.length === 0) {
-      return errorResponse(res, 'Produk tidak ditemukan', 404);
-    }
-
     const columnNames = Object.keys(fields).filter((key) => fields[key] !== undefined);
     if (columnNames.length === 0) {
       return errorResponse(res, 'Minimal satu field produk harus dikirim', 400);
@@ -138,6 +132,10 @@ export const updateProduct = async (req, res) => {
              WHERE id = $${values.length} RETURNING *`,
       values,
     );
+
+    if (result.rows.length === 0) {
+      return errorResponse(res, 'Produk tidak ditemukan', 404);
+    }
 
     return successResponse(res, 'Produk berhasil diupdate', result.rows[0]);
   } catch (error) {
