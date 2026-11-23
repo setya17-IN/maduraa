@@ -114,13 +114,14 @@ Nama wajib diisi. Nama duplikat (tanpa membedakan huruf besar/kecil) menghasilka
 
 Semua endpoint produk memerlukan Bearer token. Membuat, mengubah, dan menghapus produk hanya untuk role `owner`. Daftar produk dan transaksi membatasi `limit` maksimal 100.
 
-| Method | Endpoint        | Fungsi                                        |
-| ------ | --------------- | --------------------------------------------- |
-| GET    | `/products`     | Daftar produk dengan pencarian dan pagination |
-| GET    | `/products/:id` | Detail produk                                 |
-| POST   | `/products`     | Membuat produk                                |
-| PUT    | `/products/:id` | Mengubah field produk yang dikirim            |
-| DELETE | `/products/:id` | Menghapus produk                              |
+| Method | Endpoint              | Fungsi                                        |
+| ------ | --------------------- | --------------------------------------------- |
+| GET    | `/products`           | Daftar produk dengan pencarian dan pagination |
+| GET    | `/products/:id`       | Detail produk                                 |
+| POST   | `/products`           | Membuat produk                                |
+| PUT    | `/products/:id`       | Mengubah field produk yang dikirim            |
+| POST   | `/products/:id/image` | Mengunggah gambar produk ke cloud storage     |
+| DELETE | `/products/:id`       | Menghapus produk                              |
 
 ### Daftar dan pencarian
 
@@ -169,6 +170,26 @@ Request `POST /products` (nama dan `selling_price` wajib):
 
 Untuk `PUT`, kirim satu atau lebih field yang ingin diubah dari daftar field tersebut. Field yang tidak dikirim tidak diubah.
 
+### Mengunggah gambar produk
+
+`POST /products/:id/image` memerlukan Bearer token dengan role `owner`. Kirim satu file pada field multipart `image`. File dibatasi 2 MB dan server hanya menerima gambar JPG/JPEG, PNG, atau WEBP berdasarkan signature file. Nama file di storage dibuat server.
+
+Response `200` memakai envelope umum dan `data` berisi produk yang diperbarui, termasuk `image_url` publik:
+
+```json
+{
+  "status": "success",
+  "message": "Gambar produk berhasil diunggah",
+  "data": {
+    "id": "<uuid>",
+    "name": "Kopi",
+    "image_url": "https://<project>.supabase.co/storage/v1/object/public/product-images/products/<uuid>.png"
+  }
+}
+```
+
+File lebih dari 2 MB menghasilkan `413`; file tidak ada, format tidak didukung, atau UUID tidak valid menghasilkan `400`. Produk yang tidak ditemukan menghasilkan `404`; token tidak ada/tidak valid menghasilkan `401`, role selain `owner` menghasilkan `403`, dan kegagalan storage menghasilkan `502`.
+
 ## Transactions
 
 Semua endpoint transaksi memerlukan Bearer token.
@@ -215,9 +236,9 @@ Laporan menerima salah satu query `type=daily`, `type=weekly`, atau `type=monthl
 
 ## Akses berdasarkan role
 
-| Role | Endpoint yang dapat diakses |
-| ---- | --------------------------- |
-| `owner` | Semua endpoint, termasuk `POST/PUT/DELETE /categories`, `POST/PUT/DELETE /products`, `GET /dashboard/summary`, dan `GET /reports/sales`. |
+| Role      | Endpoint yang dapat diakses                                                                                                                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `owner` | Semua endpoint, termasuk `POST/PUT/DELETE /categories`, `POST/PUT/DELETE /products`, `POST /products/:id/image`, `GET /dashboard/summary`, dan `GET /reports/sales`. |
 | `cashier` | Auth (`POST /auth/login`, `GET /auth/me`, `POST /auth/logout`), baca kategori/produk (`GET /categories`, `GET /products`, `GET /products/:id`), dan transaksi (`POST/GET /transactions`, `GET /transactions/:id`). |
 
 Operasi tulis kategori/produk dan dashboard/laporan yang dicoba oleh cashier dibalas `403`. Kedua role dapat membaca dan membuat transaksi.
@@ -235,7 +256,9 @@ Tanpa bearer token, token invalid/kedaluwarsa, atau token yang sudah dicabut, en
 | 429    | Terlalu banyak percobaan login               |
 | 404    | Endpoint atau record tidak ditemukan; termasuk `POST /auth/register` |
 | 409    | Konflik, seperti nama kategori duplikat      |
+| 413    | File upload melebihi batas 2 MB              |
 | 500    | Kesalahan server atau database               |
+| 502    | Penyimpanan cloud gagal memproses upload      |
 
 Token tidak ada atau tidak valid menghasilkan `401`; role yang tidak diizinkan menghasilkan `403`. Error server dan database dikirim sebagai pesan umum.
 
