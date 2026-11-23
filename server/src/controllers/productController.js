@@ -1,5 +1,13 @@
 import pool from '../config/db.js';
 import { successResponse, errorResponse, paginatedResponse } from '../utils/responseHelper.js';
+import { fileTypeFromBuffer } from 'file-type';
+import { productImageStorage } from '../services/productImageStorage.js';
+
+const supportedImageTypes = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
 
 // GET /api/v1/products — Daftar produk (dengan pagination & search)
 export const getProducts = async (req, res) => {
@@ -157,4 +165,81 @@ export const deleteProduct = async (req, res) => {
   } catch (error) {
     return errorResponse(res, error.message);
   }
+};
+
+// POST /api/v1/products/:id/image — Unggah gambar produk ke cloud storage
+export const uploadProductImage = async (req, res) => {
+  if (!req.file) {
+    return errorResponse(res, 'File gambar wajib diunggah', 400);
+  }
+
+  let detectedType;
+  try {
+    detectedType = await fileTypeFromBuffer(req.file.buffer);
+  } catch {
+    return errorResponse(res, 'Tipe file gambar tidak dapat dikenali', 400);
+  }
+
+  const extension = detectedType && supportedImageTypes[detectedType.mime];
+  if (!extension) {
+    return errorResponse(res, 'Tipe file harus JPG, PNG, atau WEBP', 400);
+  }
+
+  let existingProduct;
+  try {
+    existingProduct = await pool.query('SELECT id, image_url FROM products WHERE id = $1', [
+      req.params.id,
+    ]);
+  } catch {
+    return errorResponse(res, 'Gagal memproses gambar produk');
+  }
+  if (existingProduct.rows.length === 0) {
+    return errorResponse(res, 'Produk tidak ditemukan', 404);
+  }
+
+  let uploadedImage;
+  try {
+    uploadedImage = await productImageStorage.upload({
+      buffer: req.file.buffer,
+      contentType: detectedType.mime,
+      extension,
+    });
+  } catch {
+    return errorResponse(res, 'Layanan penyimpanan gambar tidak tersedia', 502);
+  }
+
+  let updatedProduct;
+  try {
+    const result = await pool.query(
+      'UPDATE products SET image_url = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+      [uploadedImage.publicUrl, req.params.id],
+    );
+    if (result.rows.length === 0) {
+      try {
+        await productImageStorage.remove(uploadedImage.path);
+      } catch {
+        console.error('Failed to remove newly uploaded product image after missing product');
+      }
+      return errorResponse(res, 'Produk tidak ditemukan', 404);
+    }
+    updatedProduct = result.rows[0];
+  } catch {
+    try {
+      await productImageStorage.remove(uploadedImage.path);
+    } catch {
+      console.error('Failed to remove newly uploaded product image after database failure');
+    }
+    return errorResponse(res, 'Gagal menyimpan gambar produk');
+  }
+
+  const previousImageUrl = existingProduct.rows[0].image_url;
+  if (previousImageUrl) {
+    try {
+      await productImageStorage.removeByPublicUrl(previousImageUrl);
+    } catch {
+      console.error('Failed to remove previous product image from storage');
+    }
+  }
+
+  return successResponse(res, 'Gambar produk berhasil diunggah', updatedProduct);
 };

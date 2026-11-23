@@ -5,8 +5,10 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  uploadProductImage,
 } from '../controllers/productController.js';
 import verifyToken from '../middlewares/verifyToken.js';
+import productImageUpload from '../middlewares/productImageUpload.js';
 import {
   authorizeRoles,
   validatePagination,
@@ -36,5 +38,13 @@ router.put(
   updateProduct,
 );
 router.delete('/:id', verifyToken, authorizeRoles('owner'), validateIdParam, deleteProduct);
+router.post(
+  '/:id/image',
+  verifyToken,
+  authorizeRoles('owner'),
+  validateIdParam,
+  productImageUpload,
+  uploadProductImage,
+);
 
 export default router;
