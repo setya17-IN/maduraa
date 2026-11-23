@@ -8,6 +8,14 @@
 
 # Urutan pakai: jalankan "Login owner" dan "Login cashier" dulu,
 # baru request lainnya. Jalankan bagian LOGOUT (7) dan RATE LIMIT (8) paling akhir.
+#
+# Bagian 5B (upload gambar) membutuhkan file uji di folder ./test-assets/
+# (relatif terhadap lokasi file .http ini):
+#   kecil.jpg, kecil.png  -> gambar kecil (< 100 KB)
+#   besar.jpg             -> gambar lebih dari 2 MB
+#   dokumen.pdf           -> PDF apa saja
+#   palsu.jpg             -> file teks biasa yang diganti nama menjadi .jpg
+# Jangan commit folder test-assets/.
 
 ### ==========================================
 ### 1. LOGIN BERHASIL
@@ -133,7 +141,7 @@ Authorization: Bearer {{cashierToken}}
 }
 
 ### ==========================================
-### 5. PRODUK
+### 5. PRODUK - CRUD (#46)
 ### ==========================================
 
 ### Lihat produk (owner) -> 200
@@ -143,6 +151,275 @@ Authorization: Bearer {{ownerToken}}
 ### Lihat produk (cashier) -> 200
 GET {{baseUrl}}/products
 Authorization: Bearer {{cashierToken}}
+
+### Lihat produk tanpa token -> 401
+GET {{baseUrl}}/products
+
+### Buat produk (owner) -> 201, simpan id-nya
+# Jika field wajib lain diminta (mis. kategori/stok), sesuaikan body ini.
+# @name createProduct
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "name": "Produk Uji HTTP",
+  "selling_price": 15000
+}
+###
+@productId = {{createProduct.response.body.$.data.id}}
+
+### Buat produk, harga negatif -> 400
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "name": "Produk Salah",
+  "selling_price": -1
+}
+
+### Buat produk, harga string -> 400
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "name": "Produk Salah",
+  "selling_price": "abc"
+}
+
+### Buat produk, harga null -> 400
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "name": "Produk Salah",
+  "selling_price": null
+}
+
+### Buat produk (cashier) -> 403
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "name": "Produk Cashier",
+  "selling_price": 1000
+}
+
+### Detail produk -> 200
+GET {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{ownerToken}}
+
+### Detail produk (cashier) -> 200
+GET {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{cashierToken}}
+
+### Detail produk, UUID tidak valid -> 400
+GET {{baseUrl}}/products/bukan-uuid
+Authorization: Bearer {{ownerToken}}
+
+### Detail produk, UUID tidak ada -> 404
+GET {{baseUrl}}/products/00000000-0000-4000-8000-000000000000
+Authorization: Bearer {{ownerToken}}
+
+### Ubah produk (owner) -> 200
+PUT {{baseUrl}}/products/{{productId}}
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "selling_price": 16000
+}
+
+### Ubah produk, body kosong -> 400
+PUT {{baseUrl}}/products/{{productId}}
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{}
+
+### Ubah produk, harga tidak valid -> 400
+PUT {{baseUrl}}/products/{{productId}}
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "selling_price": -500
+}
+
+### Ubah produk, UUID tidak ada -> 404
+PUT {{baseUrl}}/products/00000000-0000-4000-8000-000000000000
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "selling_price": 16000
+}
+
+### Ubah produk (cashier) -> 403
+PUT {{baseUrl}}/products/{{productId}}
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "selling_price": 17000
+}
+
+### ==========================================
+### 5B. PRODUK - UPLOAD GAMBAR (#47)
+### ==========================================
+
+### Upload JPG valid (owner) -> 200, image_url terisi
+# Buka image_url di browser dan cek file di Supabase Storage > product-images
+POST {{baseUrl}}/products/{{productId}}/image
+Authorization: Bearer {{ownerToken}}
+Content-Type: multipart/form-data; boundary=----Maduraa
+
+------Maduraa
+Content-Disposition: form-data; name="image"; filename="kecil.jpg"
+Content-Type: image/jpeg
+
+< ./test-assets/kecil.jpg
+------Maduraa--
+
+### Upload ulang PNG (owner) -> 200, file lama harus hilang dari bucket
+POST {{baseUrl}}/products/{{productId}}/image
+Authorization: Bearer {{ownerToken}}
+Content-Type: multipart/form-data; boundary=----Maduraa
+
+------Maduraa
+Content-Disposition: form-data; name="image"; filename="kecil.png"
+Content-Type: image/png
+
+< ./test-assets/kecil.png
+------Maduraa--
+
+### Detail produk setelah upload -> 200, image_url terisi
+GET {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{ownerToken}}
+
+### File lebih dari 2 MB -> 413
+POST {{baseUrl}}/products/{{productId}}/image
+Authorization: Bearer {{ownerToken}}
+Content-Type: multipart/form-data; boundary=----Maduraa
+
+------Maduraa
+Content-Disposition: form-data; name="image"; filename="besar.jpg"
+Content-Type: image/jpeg
+
+< ./test-assets/besar.jpg
+------Maduraa--
+
+### PDF -> 400
+POST {{baseUrl}}/products/{{productId}}/image
+Authorization: Bearer {{ownerToken}}
+Content-Type: multipart/form-data; boundary=----Maduraa
+
+------Maduraa
+Content-Disposition: form-data; name="image"; filename="dokumen.pdf"
+Content-Type: application/pdf
+
+< ./test-assets/dokumen.pdf
+------Maduraa--
+
+### File teks bernama .jpg (magic bytes palsu) -> 400
+POST {{baseUrl}}/products/{{productId}}/image
+Authorization: Bearer {{ownerToken}}
+Content-Type: multipart/form-data; boundary=----Maduraa
+
+------Maduraa
+Content-Disposition: form-data; name="image"; filename="palsu.jpg"
+Content-Type: image/jpeg
+
+< ./test-assets/palsu.jpg
+------Maduraa--
+
+### Tanpa file (field lain saja) -> 400
+POST {{baseUrl}}/products/{{productId}}/image
+Authorization: Bearer {{ownerToken}}
+Content-Type: multipart/form-data; boundary=----Maduraa
+
+------Maduraa
+Content-Disposition: form-data; name="catatan"
+
+halo
+------Maduraa--
+
+### Upload tanpa token -> 401
+POST {{baseUrl}}/products/{{productId}}/image
+Content-Type: multipart/form-data; boundary=----Maduraa
+
+------Maduraa
+Content-Disposition: form-data; name="image"; filename="kecil.jpg"
+Content-Type: image/jpeg
+
+< ./test-assets/kecil.jpg
+------Maduraa--
+
+### Upload (cashier) -> 403
+POST {{baseUrl}}/products/{{productId}}/image
+Authorization: Bearer {{cashierToken}}
+Content-Type: multipart/form-data; boundary=----Maduraa
+
+------Maduraa
+Content-Disposition: form-data; name="image"; filename="kecil.jpg"
+Content-Type: image/jpeg
+
+< ./test-assets/kecil.jpg
+------Maduraa--
+
+### Upload, UUID tidak valid -> 400
+POST {{baseUrl}}/products/bukan-uuid/image
+Authorization: Bearer {{ownerToken}}
+Content-Type: multipart/form-data; boundary=----Maduraa
+
+------Maduraa
+Content-Disposition: form-data; name="image"; filename="kecil.jpg"
+Content-Type: image/jpeg
+
+< ./test-assets/kecil.jpg
+------Maduraa--
+
+### Upload, produk tidak ada -> 404
+POST {{baseUrl}}/products/00000000-0000-4000-8000-000000000000/image
+Authorization: Bearer {{ownerToken}}
+Content-Type: multipart/form-data; boundary=----Maduraa
+
+------Maduraa
+Content-Disposition: form-data; name="image"; filename="kecil.jpg"
+Content-Type: image/jpeg
+
+< ./test-assets/kecil.jpg
+------Maduraa--
+
+### ==========================================
+### 5C. PRODUK - HAPUS PRODUK UJI
+### ==========================================
+# Setelah selesai, hapus juga file hasil tes di Supabase Storage > product-images.
+# Menghapus produk TIDAK otomatis menghapus file gambarnya.
+
+### Hapus produk (cashier) -> 403
+DELETE {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{cashierToken}}
+
+### Hapus produk (owner) -> 200
+DELETE {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{ownerToken}}
+
+### Detail setelah dihapus -> 404
+GET {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{ownerToken}}
+
+### Hapus produk yang sudah tidak ada -> 404
+DELETE {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{ownerToken}}
+
+### Hapus produk, UUID tidak valid -> 400
+DELETE {{baseUrl}}/products/bukan-uuid
+Authorization: Bearer {{ownerToken}}
 
 ### ==========================================
 ### 6. TRANSAKSI & DASHBOARD
