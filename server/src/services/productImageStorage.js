@@ -16,13 +16,15 @@ const getStorage = () => {
   return supabaseClient.storage.from(env.supabaseStorageBucket);
 };
 
-const getPathFromPublicUrl = (publicUrl) => {
+export const getPathFromPublicUrl = (publicUrl) => {
   try {
     const url = new URL(publicUrl);
     const supabaseUrl = new URL(env.supabaseUrl);
     const prefix = `/storage/v1/object/public/${encodeURIComponent(env.supabaseStorageBucket)}/`;
     if (url.origin !== supabaseUrl.origin || !url.pathname.startsWith(prefix)) return null;
-    return decodeURIComponent(url.pathname.slice(prefix.length));
+    const path = decodeURIComponent(url.pathname.slice(prefix.length));
+    if (!path || path.startsWith('/') || path.includes('..')) return null;
+    return path;
   } catch {
     return null;
   }

@@ -3,8 +3,14 @@ import { after, before, beforeEach, describe, it } from 'node:test';
 
 process.env.DATABASE_URL ??= 'postgresql://test:test@127.0.0.1:5432/test';
 process.env.JWT_SECRET ??= 'product-image-test-secret-at-least-32-characters';
+process.env.SUPABASE_URL ??= 'https://project.supabase.co';
 
-const [{ default: app }, { default: pool }, { generateAuthToken }, { productImageStorage }] =
+const [
+  { default: app },
+  { default: pool },
+  { generateAuthToken },
+  { productImageStorage, getPathFromPublicUrl },
+] =
   await Promise.all([
     import('../src/app.js'),
     import('../src/config/db.js'),
@@ -77,15 +83,50 @@ const request = async ({
   token = true,
   file = pngBytes,
   filename = 'client-name.png',
+  fields = {},
 } = {}) => {
   const headers = {};
   if (token) headers.Authorization = `Bearer ${tokenFor(role)}`;
   const form = new FormData();
   if (file !== null) form.append('image', new Blob([file]), filename);
+  for (const [name, value] of Object.entries(fields)) form.append(name, value);
   return fetch(`${baseUrl}/${id}/image`, { method: 'POST', headers, body: form });
 };
 
 describe('product image upload endpoint', () => {
+  it('extracts a path from a valid product image URL', () => {
+    assert.equal(
+      getPathFromPublicUrl(publicUrl),
+      'products/test.png',
+    );
+  });
+
+  it('rejects a URL with a different Supabase origin', () => {
+    assert.equal(
+      getPathFromPublicUrl('https://other.supabase.co/storage/v1/object/public/product-images/products/test.png'),
+      null,
+    );
+  });
+
+  it('rejects a URL for another storage bucket', () => {
+    assert.equal(
+      getPathFromPublicUrl('https://project.supabase.co/storage/v1/object/public/other-bucket/products/test.png'),
+      null,
+    );
+  });
+
+  it('rejects a trailing slash, traversal path, and invalid URL', () => {
+    assert.equal(
+      getPathFromPublicUrl('https://project.supabase.co/storage/v1/object/public/product-images/'),
+      null,
+    );
+    assert.equal(
+      getPathFromPublicUrl('https://project.supabase.co/storage/v1/object/public/product-images/products/..%2Fsecret.png'),
+      null,
+    );
+    assert.equal(getPathFromPublicUrl('not a URL'), null);
+  });
+
   it('uploads an image, stores its public URL, and returns the updated product', async () => {
     let uploaded;
     uploadBehavior = async (options) => {
@@ -108,6 +149,25 @@ describe('product image upload endpoint', () => {
     assert.equal(response.status, 413);
     assert.equal((await response.json()).status, 'error');
     assert.equal(productImageStorage.upload.mock.calls.length, 0);
+  });
+
+  it('accepts a file exactly 2 MB in size', async () => {
+    const exactSizeImage = Buffer.concat([
+      pngBytes,
+      Buffer.alloc(2 * 1024 * 1024 - pngBytes.length),
+    ]);
+    const response = await request({ file: exactSizeImage });
+    assert.equal(response.status, 200);
+  });
+
+  it('returns 400 for a text file named with a .jpg extension', async () => {
+    const response = await request({ file: Buffer.from('plain text'), filename: 'image.jpg' });
+    assert.equal(response.status, 400);
+  });
+
+  it('returns 400 when a text field is included with the file', async () => {
+    const response = await request({ fields: { extra: 'value' } });
+    assert.equal(response.status, 400);
   });
 
   it('rejects PDF, GIF, SVG, and other non-supported file signatures', async () => {
