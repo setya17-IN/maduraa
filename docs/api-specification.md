@@ -172,7 +172,7 @@ Untuk `PUT`, kirim satu atau lebih field yang ingin diubah dari daftar field ter
 
 ### Mengunggah gambar produk
 
-`POST /products/:id/image` memerlukan Bearer token dengan role `owner`. Kirim satu file pada field multipart `image`. File dibatasi 2 MB dan server hanya menerima gambar JPG/JPEG, PNG, atau WEBP berdasarkan signature file. Nama file di storage dibuat server.
+`POST /products/:id/image` memerlukan Bearer token dengan role `owner`. Kirim satu file pada field multipart `image`. File dibatasi 2 MB dan server hanya menerima gambar JPG/JPEG atau PNG berdasarkan signature file. Nama file di storage dibuat server.
 
 Response `200` memakai envelope umum dan `data` berisi produk yang diperbarui, termasuk `image_url` publik:
 

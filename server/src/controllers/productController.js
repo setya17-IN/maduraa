@@ -6,7 +6,6 @@ import { productImageStorage } from '../services/productImageStorage.js';
 const supportedImageTypes = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
-  'image/webp': 'webp',
 };
 
 // GET /api/v1/products — Daftar produk (dengan pagination & search)
@@ -182,7 +181,7 @@ export const uploadProductImage = async (req, res) => {
 
   const extension = detectedType && supportedImageTypes[detectedType.mime];
   if (!extension) {
-    return errorResponse(res, 'Tipe file harus JPG, PNG, atau WEBP', 400);
+    return errorResponse(res, 'Tipe file harus JPG atau PNG', 400);
   }
 
   let existingProduct;

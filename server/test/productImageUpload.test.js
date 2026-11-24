@@ -25,6 +25,7 @@ const pngBytes = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/pWQAAAAASUVORK5CYII=',
   'base64',
 );
+const webpBytes = Buffer.from('UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA', 'base64');
 
 let server;
 let baseUrl;
@@ -163,6 +164,12 @@ describe('product image upload endpoint', () => {
   it('returns 400 for a text file named with a .jpg extension', async () => {
     const response = await request({ file: Buffer.from('plain text'), filename: 'image.jpg' });
     assert.equal(response.status, 400);
+  });
+
+  it('returns 400 for a WEBP image', async () => {
+    const response = await request({ file: webpBytes, filename: 'image.webp' });
+    assert.equal(response.status, 400);
+    assert.equal(productImageStorage.upload.mock.calls.length, 0);
   });
 
   it('returns 400 when a text field is included with the file', async () => {
