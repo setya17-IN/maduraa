@@ -10,13 +10,12 @@ const [
   { default: pool },
   { generateAuthToken },
   { productImageStorage, getPathFromPublicUrl },
-] =
-  await Promise.all([
-    import('../src/app.js'),
-    import('../src/config/db.js'),
-    import('../src/utils/authSecurity.js'),
-    import('../src/services/productImageStorage.js'),
-  ]);
+] = await Promise.all([
+  import('../src/app.js'),
+  import('../src/config/db.js'),
+  import('../src/utils/authSecurity.js'),
+  import('../src/services/productImageStorage.js'),
+]);
 
 const productId = 'a3bb189e-8bf9-3888-9912-ace4e6543002';
 const publicUrl =
@@ -96,22 +95,23 @@ const request = async ({
 
 describe('product image upload endpoint', () => {
   it('extracts a path from a valid product image URL', () => {
-    assert.equal(
-      getPathFromPublicUrl(publicUrl),
-      'products/test.png',
-    );
+    assert.equal(getPathFromPublicUrl(publicUrl), 'products/test.png');
   });
 
   it('rejects a URL with a different Supabase origin', () => {
     assert.equal(
-      getPathFromPublicUrl('https://other.supabase.co/storage/v1/object/public/product-images/products/test.png'),
+      getPathFromPublicUrl(
+        'https://other.supabase.co/storage/v1/object/public/product-images/products/test.png',
+      ),
       null,
     );
   });
 
   it('rejects a URL for another storage bucket', () => {
     assert.equal(
-      getPathFromPublicUrl('https://project.supabase.co/storage/v1/object/public/other-bucket/products/test.png'),
+      getPathFromPublicUrl(
+        'https://project.supabase.co/storage/v1/object/public/other-bucket/products/test.png',
+      ),
       null,
     );
   });
@@ -122,7 +122,9 @@ describe('product image upload endpoint', () => {
       null,
     );
     assert.equal(
-      getPathFromPublicUrl('https://project.supabase.co/storage/v1/object/public/product-images/products/..%2Fsecret.png'),
+      getPathFromPublicUrl(
+        'https://project.supabase.co/storage/v1/object/public/product-images/products/..%2Fsecret.png',
+      ),
       null,
     );
     assert.equal(getPathFromPublicUrl('not a URL'), null);
