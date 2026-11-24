@@ -5,7 +5,7 @@ Semua endpoint menggunakan prefix `/api/v1`. Contoh memakai `http://localhost:50
 
 ## Format umum
 
-- Request dan response menggunakan JSON, kecuali endpoint health.
+- Request dan response menggunakan JSON, kecuali endpoint health dan request upload gambar produk yang menggunakan `multipart/form-data`.
 - Endpoint yang ditandai **Bearer token** memerlukan header `Authorization: Bearer <token>`.
 - ID kategori, produk, dan transaksi berbentuk UUID.
 - Response sukses umumnya berbentuk `{ "status": "success", "message": "...", "data": ... }`.
@@ -270,4 +270,3 @@ Token tidak ada atau tidak valid menghasilkan `401`; role yang tidak diizinkan m
 - `/auth/session` belum memiliki route. Logout tersedia melalui `/auth/logout` dan memerlukan tabel `revoked_tokens`.
 - Akun `owner` dan `cashier` dibuat melalui skrip seed lokal; tidak ada registrasi publik.
 - Query laporan memvalidasi jenis periode dan pasangan tanggal ISO, menolak rentang terbalik, dan tidak menerima `type` bersamaan dengan rentang tanggal.
-- Upload foto produk belum tersedia sebagai endpoint; produk hanya menerima `image_url`.
