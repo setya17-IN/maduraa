@@ -5,7 +5,7 @@ Semua endpoint menggunakan prefix `/api/v1`. Contoh memakai `http://localhost:50
 
 ## Format umum
 
-- Request dan response menggunakan JSON, kecuali endpoint health.
+- Request dan response menggunakan JSON, kecuali endpoint health dan request upload gambar produk yang menggunakan `multipart/form-data`.
 - Endpoint yang ditandai **Bearer token** memerlukan header `Authorization: Bearer <token>`.
 - ID kategori, produk, dan transaksi berbentuk UUID.
 - Response sukses umumnya berbentuk `{ "status": "success", "message": "...", "data": ... }`.
@@ -128,6 +128,7 @@ Semua endpoint produk memerlukan Bearer token. Membuat, mengubah, dan menghapus 
 Query opsional: `page` (default `1`), `limit` (default `20`), `search` (mencari nama produk), dan `category_id`.
 
 Contoh: `GET /products?page=1&limit=20&search=kopi&category_id=<uuid>`.
+Pencarian nama bersifat case-insensitive dan partial match. `page` dan `limit` harus berupa bilangan positif; `limit` maksimal `100`.
 
 Response `200` memiliki `data` berupa array produk (termasuk `category_name`) serta metadata pagination:
 
@@ -151,6 +152,8 @@ Response `200` memiliki `data` berupa array produk (termasuk `category_name`) se
   "pagination": { "page": 1, "limit": 20, "total": 1, "totalPages": 1 }
 }
 ```
+
+Parameter pagination yang tidak valid menghasilkan `400` dengan format `{ "status": "error", "message": "page harus berupa bilangan positif" }` atau pesan yang sesuai untuk `limit`. Nilai `limit` di atas `100` menghasilkan `400` dengan pesan `limit maksimal 100`.
 
 ### Membuat dan mengubah produk
 
@@ -267,4 +270,3 @@ Token tidak ada atau tidak valid menghasilkan `401`; role yang tidak diizinkan m
 - `/auth/session` belum memiliki route. Logout tersedia melalui `/auth/logout` dan memerlukan tabel `revoked_tokens`.
 - Akun `owner` dan `cashier` dibuat melalui skrip seed lokal; tidak ada registrasi publik.
 - Query laporan memvalidasi jenis periode dan pasangan tanggal ISO, menolak rentang terbalik, dan tidak menerima `type` bersamaan dengan rentang tanggal.
-- Upload foto produk belum tersedia sebagai endpoint; produk hanya menerima `image_url`.
