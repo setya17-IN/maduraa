@@ -2,6 +2,8 @@
 
 # Kredensial dibaca dari server/.env (tidak ikut ter-commit)
 @ownerEmail = {{$dotenv OWNER_EMAIL}}
+# Ganti dengan id kategori dari GET /categories di database lokal
+@categoryId = ISI_UUID_KATEGORI
 @ownerPassword = {{$dotenv OWNER_PASSWORD}}
 @cashierEmail = {{$dotenv CASHIER_EMAIL}}
 @cashierPassword = {{$dotenv CASHIER_PASSWORD}}
@@ -467,3 +469,27 @@ Content-Type: application/json
   "email": "{{ownerEmail}}",
   "password": "PasswordSalah123"
 }
+
+### ==========================================
+### 9. SEARCH, FILTER & PAGINATION PRODUK (#48)
+### ==========================================
+
+### Cari produk berdasarkan nama
+GET {{baseUrl}}/products?search=kopi
+Authorization: Bearer {{ownerToken}}
+
+### Filter produk berdasarkan kategori
+GET {{baseUrl}}/products?category_id={{categoryId}}
+Authorization: Bearer {{ownerToken}}
+
+### Cari produk dalam kategori
+GET {{baseUrl}}/products?search=kopi&category_id={{categoryId}}
+Authorization: Bearer {{ownerToken}}
+
+### Pagination halaman 2 dengan 10 produk per halaman
+GET {{baseUrl}}/products?page=2&limit=10
+Authorization: Bearer {{ownerToken}}
+
+### Search, filter kategori, dan pagination sekaligus
+GET {{baseUrl}}/products?search=kopi&category_id={{categoryId}}&page=2&limit=10
+Authorization: Bearer {{ownerToken}}

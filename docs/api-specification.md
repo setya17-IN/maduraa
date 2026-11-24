@@ -128,6 +128,7 @@ Semua endpoint produk memerlukan Bearer token. Membuat, mengubah, dan menghapus 
 Query opsional: `page` (default `1`), `limit` (default `20`), `search` (mencari nama produk), dan `category_id`.
 
 Contoh: `GET /products?page=1&limit=20&search=kopi&category_id=<uuid>`.
+Pencarian nama bersifat case-insensitive dan partial match. `page` dan `limit` harus berupa bilangan positif; `limit` maksimal `100`.
 
 Response `200` memiliki `data` berupa array produk (termasuk `category_name`) serta metadata pagination:
 
@@ -151,6 +152,8 @@ Response `200` memiliki `data` berupa array produk (termasuk `category_name`) se
   "pagination": { "page": 1, "limit": 20, "total": 1, "totalPages": 1 }
 }
 ```
+
+Parameter pagination yang tidak valid menghasilkan `400` dengan format `{ "status": "error", "message": "page harus berupa bilangan positif" }` atau pesan yang sesuai untuk `limit`. Nilai `limit` di atas `100` menghasilkan `400` dengan pesan `limit maksimal 100`.
 
 ### Membuat dan mengubah produk
 
