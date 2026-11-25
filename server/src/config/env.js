@@ -1,5 +1,10 @@
 import 'dotenv/config';
 
+const nodeEnv = process.env.NODE_ENV;
+if (!nodeEnv) {
+  throw new Error('NODE_ENV harus ditetapkan secara eksplisit');
+}
+
 const required = ['DATABASE_URL', 'JWT_SECRET'];
 const missing = required.filter((key) => !process.env[key]);
 
@@ -23,7 +28,7 @@ export const env = Object.freeze({
   databaseCa: process.env.DATABASE_CA,
   databaseSsl: process.env.DATABASE_SSL !== 'false',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
   supabaseUrl: process.env.SUPABASE_URL,
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
   supabaseStorageBucket: process.env.SUPABASE_STORAGE_BUCKET || 'product-images',

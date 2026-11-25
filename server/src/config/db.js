@@ -3,11 +3,21 @@ import { env } from './env.js';
 
 const { Pool } = pg;
 
-const ssl = !env.databaseSsl
-  ? false
-  : env.nodeEnv === 'development'
-    ? { rejectUnauthorized: false }
-    : { rejectUnauthorized: true, ...(env.databaseCa ? { ca: env.databaseCa } : {}) };
+export const resolveDatabaseSsl = ({ databaseSsl, databaseCa, nodeEnv }) => {
+  const ssl = !databaseSsl
+    ? false
+    : nodeEnv === 'development'
+      ? { rejectUnauthorized: false }
+      : { rejectUnauthorized: true, ...(databaseCa ? { ca: databaseCa } : {}) };
+
+  if (nodeEnv === 'production' && (!ssl || ssl.rejectUnauthorized !== true)) {
+    throw new Error('Database TLS with certificate verification is required in production');
+  }
+
+  return ssl;
+};
+
+const ssl = resolveDatabaseSsl(env);
 
 const pool = new Pool({
   connectionString: env.databaseUrl,
